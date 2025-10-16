@@ -79,6 +79,52 @@ public class ApontamentoController {
     }
 
     /**
+     * LIST - Lista apontamentos de um usuário específico (usa índice secundário B+ Tree)
+     */
+    public void listarApontamentosPorUsuario() {
+        try {
+            int idUsuario = view.lerInteiro("ID do Usuário: ");
+
+            List<ApontamentoDeHoras> lista = arquivoApontamento.listarPorUsuario(idUsuario);
+            if (lista.isEmpty()) {
+                view.exibirMensagem("Nenhum apontamento ativo encontrado para este usuário.");
+                return;
+            }
+            view.exibirMensagem("Apontamentos do Usuário " + idUsuario + ":");
+            for (ApontamentoDeHoras a : lista) {
+                view.exibirMensagem(a.toString());
+            }
+        } catch (NumberFormatException e) {
+            view.exibirErro("ID inválido.");
+        } catch (Exception e) {
+            view.exibirErro("Falha ao listar apontamentos: " + e.getMessage());
+        }
+    }
+
+    /**
+     * LIST - Lista apontamentos de uma tarefa específica (usa índice secundário B+ Tree)
+     */
+    public void listarApontamentosPorTarefa() {
+        try {
+            int idTarefa = view.lerInteiro("ID da Tarefa: ");
+
+            List<ApontamentoDeHoras> lista = arquivoApontamento.listarPorTarefa(idTarefa);
+            if (lista.isEmpty()) {
+                view.exibirMensagem("Nenhum apontamento ativo encontrado para esta tarefa.");
+                return;
+            }
+            view.exibirMensagem("Apontamentos da Tarefa " + idTarefa + ":");
+            for (ApontamentoDeHoras a : lista) {
+                view.exibirMensagem(a.toString());
+            }
+        } catch (NumberFormatException e) {
+            view.exibirErro("ID inválido.");
+        } catch (Exception e) {
+            view.exibirErro("Falha ao listar apontamentos: " + e.getMessage());
+        }
+    }
+
+    /**
      * DELETE - Exclusão lógica de um apontamento
      */
     public void deletarApontamento() {

@@ -64,6 +64,8 @@ public class Main {
                     case 17 -> apontamentoController.criarApontamento();
                     case 18 -> apontamentoController.listarApontamentos();
                     case 19 -> apontamentoController.deletarApontamento();
+                    case 20 -> apontamentoController.listarApontamentosPorUsuario();
+                    case 21 -> apontamentoController.listarApontamentosPorTarefa();
 
                     case 0 -> System.out.println("Tchau!");
                     default -> System.out.println("Opção inválida!");

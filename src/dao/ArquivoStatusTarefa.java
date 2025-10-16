@@ -1,8 +1,8 @@
 package dao;
 
 import models.StatusTarefa;
-import entidades.ArvoreBMais;
-import entidades.RegistroIndice;
+import models.structures.ArvoreBMais;
+import models.structures.RegistroIndice;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

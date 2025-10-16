@@ -1,4 +1,4 @@
-package entidades;
+package models.structures;
 
 import java.io.*;
 

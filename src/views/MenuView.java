@@ -44,6 +44,8 @@ public class MenuView {
         System.out.println("17 - Criar Apontamento");
         System.out.println("18 - Listar Apontamentos Ativos");
         System.out.println("19 - Deletar Apontamento (Lógico)");
+        System.out.println("20 - Listar Apontamentos por Usuário (B+ Tree)");
+        System.out.println("21 - Listar Apontamentos por Tarefa (B+ Tree)");
 
         System.out.println("0 - Sair");
         System.out.print("Opção: ");

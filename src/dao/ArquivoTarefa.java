@@ -1,9 +1,9 @@
 package dao;
 
 import models.Tarefa;
-import entidades.ArvoreBMais;
-import entidades.RegistroIndice;
-import entidades.RegistroIndiceSecundario;
+import models.structures.ArvoreBMais;
+import models.structures.RegistroIndice;
+import models.structures.RegistroIndiceSecundario;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

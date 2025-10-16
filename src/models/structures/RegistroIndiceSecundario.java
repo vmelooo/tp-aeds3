@@ -1,4 +1,4 @@
-package entidades;
+package models.structures;
 
 import java.io.*;
 
@@ -29,6 +29,11 @@ public class RegistroIndiceSecundario implements RegistroArvoreBMais<RegistroInd
     int diff = Integer.compare(this.chaveSecundaria, other.chaveSecundaria);
     if (diff != 0) {
       return diff;
+    }
+    // Se qualquer uma das chaves primárias for -1, trata como wildcard
+    // (busca todos os registros com a mesma chave secundária)
+    if (this.chavePrimaria == -1 || other.chavePrimaria == -1) {
+      return 0;
     }
     return Integer.compare(this.chavePrimaria, other.chavePrimaria);
   }
