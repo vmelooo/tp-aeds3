@@ -3,7 +3,9 @@ import models.*;
 import controllers.*;
 import views.MenuView;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
 
@@ -11,29 +13,24 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            // Inicialização dos DAOs (Data Access Objects)
-            ArquivoUsuario arqU = new ArquivoUsuario("usuarios.db");
-            ArquivoTarefa arqT = new ArquivoTarefa("tarefas.db");
-            ArquivoStatusTarefa arqS = new ArquivoStatusTarefa("status.db");
-            ArquivoCategoria arqC = new ArquivoCategoria("categorias.db");
-            ArquivoApontamentoDeHoras arqA = new ArquivoApontamentoDeHoras("apontamentos.db");
-            ArquivoTarefaCategoria arqTC = new ArquivoTarefaCategoria("tarefas_categorias.db");
+            ArquivoUsuario arqU = new ArquivoUsuario();
+            ArquivoTarefa arqT = new ArquivoTarefa();
+            ArquivoStatusTarefa arqS = new ArquivoStatusTarefa();
+            ArquivoCategoria arqC = new ArquivoCategoria();
+            ArquivoApontamentoDeHoras arqA = new ArquivoApontamentoDeHoras();
+            ArquivoTarefaCategoria arqTC = new ArquivoTarefaCategoria();
 
-            // Inicialização da VIEW
             MenuView view = new MenuView(sc);
 
-            // Inicialização dos CONTROLLERs
             UsuarioController usuarioController = new UsuarioController(arqU, view);
             TarefaController tarefaController = new TarefaController(arqT, arqU, arqS, arqC, arqTC, view);
             StatusController statusController = new StatusController(arqS, view);
             CategoriaController categoriaController = new CategoriaController(arqC, view);
             ApontamentoController apontamentoController = new ApontamentoController(arqA, arqU, arqT, view);
 
-            // Cria dados padrão
             inicializarStatusPadrao(arqS);
             inicializarCategoriasPadrao(arqC);
 
-            // Loop principal da aplicação
             int opcao;
             do {
                 opcao = view.exibirMenuPrincipal();
@@ -81,7 +78,8 @@ public class Main {
     }
 
     private static void inicializarStatusPadrao(ArquivoStatusTarefa arqS) throws Exception {
-        List<StatusTarefa> lista = arqS.listarTodos();
+        // TODO: we need to use index here `listarTodosAtivos`
+        List<StatusTarefa> lista = arqS.listarTodosAtivos();
         if (lista.isEmpty()) {
             List<String> nomes1 = Arrays.asList("Pendente");
             List<String> nomes2 = Arrays.asList("Em andamento");
