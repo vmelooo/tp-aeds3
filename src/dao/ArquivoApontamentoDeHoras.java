@@ -1,6 +1,6 @@
-package dados;
+package dao;
 
-import entidades.ApontamentoDeHoras;
+import models.ApontamentoDeHoras;
 import java.io.IOException;
 import java.util.List;
 

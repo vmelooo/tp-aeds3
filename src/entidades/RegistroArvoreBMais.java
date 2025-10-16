@@ -8,7 +8,7 @@ conter.
 Implementado pelo Prof. Marcos Kutova
 v1.0 - 2021
 */
-package aed3;
+package entidades;
 
 import java.io.IOException;
 

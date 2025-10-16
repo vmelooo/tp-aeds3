@@ -1,6 +1,6 @@
-package dados;
+package dao;
 
-import entidades.Categoria;
+import models.Categoria;
 import java.io.IOException;
 import java.util.List;
 

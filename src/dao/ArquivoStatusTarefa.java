@@ -1,6 +1,6 @@
-package dados;
+package dao;
 
-import entidades.StatusTarefa;
+import models.StatusTarefa;
 import java.io.IOException;
 import java.util.List;
 

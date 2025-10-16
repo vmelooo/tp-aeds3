@@ -1,10 +1,9 @@
-package dados;
+package dao;
 
-import entidades.Usuario;
+import models.Usuario;
 import java.io.IOException;
 import java.util.List;
 
-// Estende a classe base de persistência serializada
 public class ArquivoUsuario extends ArquivoGenerico<Usuario> {
 
     public ArquivoUsuario(String arquivo) {

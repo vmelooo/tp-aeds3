@@ -1,6 +1,6 @@
-package dados;
+package dao;
 
-import entidades.Tarefa;
+import models.Tarefa;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
