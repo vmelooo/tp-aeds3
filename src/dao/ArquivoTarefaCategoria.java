@@ -1,72 +1,147 @@
 package dao;
 
 import models.TarefaCategoria;
+import entidades.ArvoreBMais;
+import entidades.RegistroIndice;
+
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.List;
 
-public class ArquivoTarefaCategoria extends ArquivoGenerico<TarefaCategoria> {
+public class ArquivoTarefaCategoria {
 
-    public ArquivoTarefaCategoria(String arquivo) {
-        super(arquivo);
+  private final Arquivo<TarefaCategoria> arquivo;
+  private final ArvoreBMais<RegistroIndice> index;
+  private int proximoId;
+
+  public ArquivoTarefaCategoria() throws Exception {
+    Constructor<TarefaCategoria> construtorHeap = TarefaCategoria.class.getConstructor();
+    this.arquivo = new Arquivo<>("tarefas_categorias.db", construtorHeap);
+
+    Constructor<RegistroIndice> construtorIndex = RegistroIndice.class.getConstructor();
+    this.index = new ArvoreBMais<>(construtorIndex, 4, "data/tarefas_categorias.idx");
+
+    this.proximoId = getLastId() + 1;
+  }
+
+  // --- CRUD Methods ---
+
+  // CREATE
+  public int create(TarefaCategoria tc) throws Exception {
+    if (read(tc.getIdTarefa(), tc.getIdCategoria()) != null) {
+      // TODO: maybe throw a proper error?
+      return -1;
     }
 
-    // CREATE
-    public boolean create(TarefaCategoria tc) throws IOException, ClassNotFoundException {
-        // Validação: Não pode existir a mesma combinação Tarefa-Categoria (PK duplicada)
-        if (read(tc.getIdTarefa(), tc.getIdCategoria()) != null) {
-            // Este registro já existe e está ativo
-            return false; 
-        }
-        
-        List<TarefaCategoria> lista = readAll();
+    tc.setId(proximoId++);
+
+    long pos = arquivo.create(tc);
+
+    RegistroIndice indice = new RegistroIndice(tc.getId(), pos);
+    index.create(indice);
+
+    return tc.getId();
+  }
+
+  // READ
+  public TarefaCategoria read(int id) throws Exception {
+    RegistroIndice indice = new RegistroIndice(id, -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return null;
+    }
+
+    long pos = resultados.get(0).getPonteiro();
+    return arquivo.read(pos);
+  }
+
+  // UPDATE
+  public boolean update(TarefaCategoria tcAtualizada) throws Exception {
+    RegistroIndice indice = new RegistroIndice(tcAtualizada.getId(), -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return false;
+    }
+
+    long pos = resultados.get(0).getPonteiro();
+    long newPos = arquivo.update(pos, tcAtualizada);
+
+    if (newPos != pos) {
+      RegistroIndice newIndice = new RegistroIndice(tcAtualizada.getId(), newPos);
+      index.delete(indice);
+      index.create(newIndice);
+    }
+
+    return true;
+  }
+
+  // DELETE (by surrogate ID)
+  public boolean delete(int id) throws Exception {
+    RegistroIndice indice = new RegistroIndice(id, -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return false;
+    }
+
+    long pos = resultados.get(0).getPonteiro();
+    return arquivo.delete(pos);
+  }
+
+  // --- Helper and List Methods ---
+
+  /**
+   * Finds a record by its natural composite key. This still requires a file scan.
+   */
+  public TarefaCategoria read(int idTarefa, int idCategoria) throws IOException {
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
+
+    while (raf.getFilePointer() < raf.length()) {
+      long pos = raf.getFilePointer();
+      TarefaCategoria tc = arquivo.read(pos);
+      if (tc != null && tc.getIdTarefa() == idTarefa && tc.getIdCategoria() == idCategoria) {
+        return tc;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Lists all relationships for a given task. This also requires a file scan.
+   */
+  public List<TarefaCategoria> listarPorTarefa(int idTarefa) throws IOException {
+    List<TarefaCategoria> lista = new ArrayList<>();
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
+
+    while (raf.getFilePointer() < raf.length()) {
+      long pos = raf.getFilePointer();
+      TarefaCategoria tc = arquivo.read(pos);
+      if (tc != null && tc.getIdTarefa() == idTarefa && tc.isAtivo()) {
         lista.add(tc);
-        salvar(lista);
-        return true;
+      }
     }
+    return lista;
+  }
 
-    // READ (por Chave Composta)
-    public TarefaCategoria read(int idTarefa, int idCategoria) throws IOException, ClassNotFoundException {
-        List<TarefaCategoria> lista = readAll();
-        for (TarefaCategoria tc : lista) {
-            if (tc.getIdTarefa() == idTarefa && tc.getIdCategoria() == idCategoria && tc.isAtivo()) {
-                return tc;
-            }
-        }
-        return null; 
-    }
+  // Helper method to find the highest ID in the file on startup.
+  private int getLastId() throws IOException {
+    int maxId = 0;
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
 
-    // READ ALL ATIVOS de um lado do relacionamento (Ex: todas as Categorias de uma Tarefa)
-    public List<TarefaCategoria> listarPorTarefa(int idTarefa) throws IOException, ClassNotFoundException {
-        List<TarefaCategoria> todos = super.readAll();
-        todos.removeIf(tc -> tc.getIdTarefa() != idTarefa || !tc.isAtivo());
-        return todos;
+    while (raf.getFilePointer() < raf.length()) {
+      long pos = raf.getFilePointer();
+      TarefaCategoria tc = arquivo.read(pos);
+      if (tc != null && tc.getId() > maxId) {
+        maxId = tc.getId();
+      }
     }
-
-    // UPDATE
-    public boolean update(TarefaCategoria tc) throws IOException, ClassNotFoundException {
-        List<TarefaCategoria> lista = readAll();
-        for (int i = 0; i < lista.size(); i++) {
-            TarefaCategoria existente = lista.get(i);
-            if (existente.getIdTarefa() == tc.getIdTarefa() && existente.getIdCategoria() == tc.getIdCategoria()) {
-                tc.setAtivo(existente.isAtivo()); 
-                lista.set(i, tc);
-                salvar(lista);
-                return true;
-            }
-        }
-        return false; 
-    }
-
-    // DELETE (Exclusão Lógica)
-    public boolean delete(int idTarefa, int idCategoria) throws IOException, ClassNotFoundException {
-        List<TarefaCategoria> lista = readAll();
-        for (TarefaCategoria tc : lista) {
-            if (tc.getIdTarefa() == idTarefa && tc.getIdCategoria() == idCategoria && tc.isAtivo()) {
-                tc.setAtivo(false); 
-                salvar(lista);
-                return true;
-            }
-        }
-        return false; 
-    }
+    return maxId;
+  }
 }

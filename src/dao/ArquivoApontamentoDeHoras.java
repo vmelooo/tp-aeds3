@@ -1,67 +1,121 @@
 package dao;
 
 import models.ApontamentoDeHoras;
+import entidades.ArvoreBMais;
+import entidades.RegistroIndice;
+
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.List;
 
-public class ArquivoApontamentoDeHoras extends ArquivoGenerico<ApontamentoDeHoras> {
+public class ArquivoApontamentoDeHoras {
 
-    public ArquivoApontamentoDeHoras(String arquivo) {
-        super(arquivo);
+  private final Arquivo<ApontamentoDeHoras> arquivo;
+  private final ArvoreBMais<RegistroIndice> index;
+  private int proximoId;
+
+  public ArquivoApontamentoDeHoras() throws Exception {
+    Constructor<ApontamentoDeHoras> construtorHeap = ApontamentoDeHoras.class.getConstructor();
+    this.arquivo = new Arquivo<>("apontamentos.db", construtorHeap);
+
+    Constructor<RegistroIndice> construtorIndex = RegistroIndice.class.getConstructor();
+    this.index = new ArvoreBMais<>(construtorIndex, 4, "data/apontamentos.idx");
+
+    this.proximoId = getLastId() + 1;
+  }
+
+  // --- CRUD Methods ---
+
+  // CREATE
+  public int create(ApontamentoDeHoras a) throws Exception {
+    a.setId(proximoId++);
+
+    long pos = arquivo.create(a);
+    RegistroIndice indice = new RegistroIndice(a.getId(), pos);
+
+    index.create(indice);
+
+    return a.getId();
+  }
+
+  // READ
+  public ApontamentoDeHoras read(int id) throws Exception {
+    RegistroIndice indice = new RegistroIndice(id, -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return null;
     }
 
-    // CREATE
-    public int create(ApontamentoDeHoras a) throws IOException, ClassNotFoundException {
-        List<ApontamentoDeHoras> lista = readAll();
-        int id = lista.size() + 1; 
-        a.setId(id);
+    long pos = resultados.get(0).getPonteiro();
+    return arquivo.read(pos);
+  }
+
+  // UPDATE
+  public boolean update(ApontamentoDeHoras apontamentoAtualizado) throws Exception {
+    RegistroIndice indice = new RegistroIndice(apontamentoAtualizado.getId(), -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return false;
+    }
+
+    long pos = resultados.get(0).getPonteiro();
+    long newPos = arquivo.update(pos, apontamentoAtualizado);
+
+    if (newPos != pos) {
+      RegistroIndice newIndice = new RegistroIndice(apontamentoAtualizado.getId(), newPos);
+      index.delete(indice);
+      index.create(newIndice);
+    }
+
+    return true;
+  }
+
+  // DELETE (Logical)
+  public boolean delete(int id) throws Exception {
+    RegistroIndice indice = new RegistroIndice(id, -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return false;
+    }
+
+    long pos = resultados.get(0).getPonteiro();
+    return arquivo.delete(pos);
+  }
+
+  // --- List Methods ---
+
+  public List<ApontamentoDeHoras> listarTodosAtivos() throws IOException {
+    List<ApontamentoDeHoras> lista = new ArrayList<>();
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
+
+    while (raf.getFilePointer() < raf.length()) {
+      long pos = raf.getFilePointer();
+      ApontamentoDeHoras a = arquivo.read(pos);
+      if (a != null && a.isAtivo()) {
         lista.add(a);
-        salvar(lista);
-        return id;
+      }
     }
+    return lista;
+  }
 
-    // READ (por ID)
-    public ApontamentoDeHoras read(int id) throws IOException, ClassNotFoundException {
-        List<ApontamentoDeHoras> lista = readAll();
-        for (ApontamentoDeHoras a : lista) {
-            if (a.getId() == id && a.isAtivo()) {
-                return a;
-            }
-        }
-        return null; 
-    }
+  private int getLastId() throws IOException {
+    int maxId = 0;
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
 
-    // READ ALL ATIVOS
-    public List<ApontamentoDeHoras> listarTodosAtivos() throws IOException, ClassNotFoundException {
-        List<ApontamentoDeHoras> todos = super.readAll();
-        todos.removeIf(a -> !a.isAtivo());
-        return todos;
+    while (raf.getFilePointer() < raf.length()) {
+      long pos = raf.getFilePointer();
+      ApontamentoDeHoras a = arquivo.read(pos);
+      if (a != null && a.getId() > maxId) {
+        maxId = a.getId();
+      }
     }
-    
-    // UPDATE
-    public boolean update(ApontamentoDeHoras a) throws IOException, ClassNotFoundException {
-        List<ApontamentoDeHoras> lista = readAll();
-        for (int i = 0; i < lista.size(); i++) {
-            if (lista.get(i).getId() == a.getId()) {
-                a.setAtivo(lista.get(i).isAtivo()); 
-                lista.set(i, a);
-                salvar(lista);
-                return true;
-            }
-        }
-        return false; 
-    }
-
-    // DELETE (Exclusão Lógica)
-    public boolean delete(int id) throws IOException, ClassNotFoundException {
-        List<ApontamentoDeHoras> lista = readAll();
-        for (ApontamentoDeHoras a : lista) {
-            if (a.getId() == id && a.isAtivo()) {
-                a.setAtivo(false); 
-                salvar(lista);
-                return true;
-            }
-        }
-        return false; 
-    }
+    return maxId;
+  }
 }

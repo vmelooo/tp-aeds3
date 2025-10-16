@@ -1,69 +1,122 @@
 package dao;
 
 import models.StatusTarefa;
+import entidades.ArvoreBMais;
+import entidades.RegistroIndice;
+
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.List;
 
-public class ArquivoStatusTarefa extends ArquivoGenerico<StatusTarefa> {
+public class ArquivoStatusTarefa {
 
-    public ArquivoStatusTarefa(String arquivo) {
-        super(arquivo);
+  private final Arquivo<StatusTarefa> arquivo;
+  private final ArvoreBMais<RegistroIndice> index;
+  private int proximoId;
+
+  public ArquivoStatusTarefa() throws Exception {
+    Constructor<StatusTarefa> construtorHeap = StatusTarefa.class.getConstructor();
+    this.arquivo = new Arquivo<>("status.db", construtorHeap);
+
+    Constructor<RegistroIndice> construtorIndex = RegistroIndice.class.getConstructor();
+    this.index = new ArvoreBMais<>(construtorIndex, 4, "data/status.idx");
+
+    this.proximoId = getLastId() + 1;
+  }
+
+  // --- CRUD Methods ---
+
+  // CREATE
+  public int create(StatusTarefa s) throws Exception {
+    s.setId(proximoId++);
+
+    long pos = arquivo.create(s);
+    RegistroIndice indice = new RegistroIndice(s.getId(), pos);
+
+    index.create(indice);
+
+    return s.getId();
+  }
+
+  // READ
+  public StatusTarefa read(int id) throws Exception {
+    RegistroIndice indice = new RegistroIndice(id, -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return null;
     }
 
-    // CREATE
-    public int create(StatusTarefa s) throws IOException, ClassNotFoundException {
-        List<StatusTarefa> lista = readAll();
-        int id = lista.size() + 1;
-        s.setId(id);
+    long pos = resultados.get(0).getPonteiro();
+    return arquivo.read(pos);
+  }
+
+  // UPDATE
+  public boolean update(StatusTarefa statusAtualizado) throws Exception {
+    RegistroIndice indice = new RegistroIndice(statusAtualizado.getId(), -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return false;
+    }
+
+    long pos = resultados.get(0).getPonteiro();
+
+    long newPos = arquivo.update(pos, statusAtualizado);
+
+    if (newPos != pos) {
+      RegistroIndice newIndice = new RegistroIndice(statusAtualizado.getId(), newPos);
+      index.delete(indice);
+      index.create(newIndice);
+    }
+
+    return true;
+  }
+
+  // DELETE (Logical)
+  public boolean delete(int id) throws Exception {
+    RegistroIndice indice = new RegistroIndice(id, -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return false;
+    }
+
+    long pos = resultados.get(0).getPonteiro();
+    return arquivo.delete(pos);
+  }
+
+  // --- List Methods ---
+
+  public List<StatusTarefa> listarTodosAtivos() throws IOException {
+    List<StatusTarefa> lista = new ArrayList<>();
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
+
+    while (raf.getFilePointer() < raf.length()) {
+      long pos = raf.getFilePointer();
+      StatusTarefa s = arquivo.read(pos);
+      if (s != null && s.isAtivo()) {
         lista.add(s);
-        salvar(lista);
-        return id;
+      }
     }
+    return lista;
+  }
 
-    // READ (por ID)
-    public StatusTarefa read(int id) throws IOException, ClassNotFoundException {
-        List<StatusTarefa> lista = readAll();
-        for (StatusTarefa s : lista) {
-            if (s.getId() == id && s.isAtivo()) {
-                return s;
-            }
-        }
-        return null;
-    }
+  private int getLastId() throws IOException {
+    int maxId = 0;
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
 
-    // READ ALL ATIVOS (Seu antigo listarTodos, que usarei no Main)
-    public List<StatusTarefa> listarTodos() throws IOException, ClassNotFoundException {
-        List<StatusTarefa> todos = super.readAll();
-        todos.removeIf(s -> !s.isAtivo());
-        return todos;
+    while (raf.getFilePointer() < raf.length()) {
+      long pos = raf.getFilePointer();
+      StatusTarefa s = arquivo.read(pos);
+      if (s != null && s.getId() > maxId) {
+        maxId = s.getId();
+      }
     }
-
-    // UPDATE
-    public boolean update(StatusTarefa s) throws IOException, ClassNotFoundException {
-        List<StatusTarefa> lista = readAll();
-        for (int i = 0; i < lista.size(); i++) {
-            if (lista.get(i).getId() == s.getId()) {
-                s.setAtivo(lista.get(i).isAtivo());
-                lista.set(i, s);
-                salvar(lista);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // DELETE (Exclusão Lógica)
-    public boolean delete(int id) throws IOException, ClassNotFoundException {
-        List<StatusTarefa> lista = readAll();
-        for (StatusTarefa s : lista) {
-            // Um status que já tem tarefas ligadas NÃO deveria ser excluído para
-            // manter a Integridade Referencial, mas para Exclusão Lógica simples...
-            if (s.getId() == id && s.isAtivo()) {
-                s.setAtivo(false);
-                salvar(lista);
-                return true;
-            }
-        }
-        return false;
-    }
+    return maxId;
+  }
 }

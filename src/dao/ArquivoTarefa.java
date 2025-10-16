@@ -1,83 +1,133 @@
 package dao;
 
 import models.Tarefa;
+import entidades.ArvoreBMais;
+import entidades.RegistroIndice;
+import entidades.RegistroIndiceSecundario;
+
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ArquivoTarefa extends ArquivoGenerico<Tarefa> {
+public class ArquivoTarefa {
 
-    public ArquivoTarefa(String arquivo) {
-        super(arquivo);
+  private final Arquivo<Tarefa> arquivo;
+  private final ArvoreBMais<RegistroIndice> index;
+  private final ArvoreBMais<RegistroIndiceSecundario> indexUsuario;
+  private int proximoId;
+
+  public ArquivoTarefa() throws Exception {
+    Constructor<Tarefa> construtorHeap = Tarefa.class.getConstructor();
+    this.arquivo = new Arquivo<>("tarefas.db", construtorHeap);
+
+    Constructor<RegistroIndice> construtorIndex = RegistroIndice.class.getConstructor();
+    this.index = new ArvoreBMais<>(construtorIndex, 4, "data/tarefas.idx");
+
+    Constructor<RegistroIndiceSecundario> construtorIndexUsuario = RegistroIndiceSecundario.class.getConstructor();
+    this.indexUsuario = new ArvoreBMais<>(construtorIndexUsuario, 4, "data/tarefas_usuario.idx");
+
+    this.proximoId = getLastId() + 1;
+  }
+
+  // CREATE
+  public int create(Tarefa t) throws Exception {
+    t.setId(proximoId++);
+    long pos = arquivo.create(t);
+
+    index.create(new RegistroIndice(t.getId(), pos));
+    indexUsuario.create(new RegistroIndiceSecundario(t.getIdUsuario(), t.getId()));
+
+    return t.getId();
+  }
+
+  // READ
+  public Tarefa read(int id) throws Exception {
+    ArrayList<RegistroIndice> resultados = index.read(new RegistroIndice(id, -1));
+    if (resultados.isEmpty())
+      return null;
+    return arquivo.read(resultados.get(0).getPonteiro());
+  }
+
+  // UPDATE
+  public boolean update(Tarefa tarefaAtualizada) throws Exception {
+    Tarefa tarefaAntiga = read(tarefaAtualizada.getId());
+    if (tarefaAntiga == null)
+      return false;
+
+    // Update secondary index on change
+    if (tarefaAntiga.getIdUsuario() != tarefaAtualizada.getIdUsuario()) {
+      indexUsuario.delete(new RegistroIndiceSecundario(tarefaAntiga.getIdUsuario(), tarefaAntiga.getId()));
+      indexUsuario.create(new RegistroIndiceSecundario(tarefaAtualizada.getIdUsuario(), tarefaAtualizada.getId()));
     }
 
-    // CREATE
-    public int create(Tarefa t) throws IOException, ClassNotFoundException {
-        List<Tarefa> lista = readAll();
-        int id = lista.size() + 1;
-        t.setId(id);
+    RegistroIndice indicePrimario = new RegistroIndice(tarefaAtualizada.getId(), -1);
+    long pos = index.read(indicePrimario).get(0).getPonteiro();
+    long newPos = arquivo.update(pos, tarefaAtualizada);
+
+    if (newPos != pos) {
+      index.delete(indicePrimario);
+      index.create(new RegistroIndice(tarefaAtualizada.getId(), newPos));
+    }
+    return true;
+  }
+
+  // DELETE
+  public boolean delete(int id) throws Exception {
+    Tarefa t = read(id);
+    if (t == null)
+      return false;
+
+    // need to fix both
+    indexUsuario.delete(new RegistroIndiceSecundario(t.getIdUsuario(), t.getId()));
+
+    RegistroIndice indicePrimario = new RegistroIndice(id, -1);
+    long pos = index.read(indicePrimario).get(0).getPonteiro();
+    return arquivo.delete(pos);
+  }
+
+  // --- List Methods ---
+
+  public List<Tarefa> listarPorUsuario(int idUsuario) throws Exception {
+    List<Tarefa> filtrada = new ArrayList<>();
+
+    // first search on secondary index
+    ArrayList<RegistroIndiceSecundario> resultados = indexUsuario.read(new RegistroIndiceSecundario(idUsuario, -1));
+
+    // then get from those
+    for (RegistroIndiceSecundario res : resultados) {
+      Tarefa t = read(res.getChavePrimaria());
+      if (t != null && t.isAtivo()) {
+        filtrada.add(t);
+      }
+    }
+    return filtrada;
+  }
+
+  public List<Tarefa> listarTodosAtivos() throws IOException {
+    List<Tarefa> lista = new ArrayList<>();
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
+    while (raf.getFilePointer() < raf.length()) {
+      Tarefa t = arquivo.read(raf.getFilePointer());
+      if (t != null && t.isAtivo()) {
         lista.add(t);
-        salvar(lista);
-        return id;
+      }
     }
+    return lista;
+  }
 
-    // READ (por ID)
-    public Tarefa read(int id) throws IOException, ClassNotFoundException {
-        List<Tarefa> lista = readAll();
-        for (Tarefa t : lista) {
-            if (t.getId() == id && t.isAtivo()) {
-                return t;
-            }
-        }
-        return null;
+  private int getLastId() throws IOException {
+    int maxId = 0;
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
+    while (raf.getFilePointer() < raf.length()) {
+      Tarefa t = arquivo.read(raf.getFilePointer());
+      if (t != null && t.getId() > maxId) {
+        maxId = t.getId();
+      }
     }
-    
-    // READ ALL ATIVOS
-    public List<Tarefa> listarTodosAtivos() throws IOException, ClassNotFoundException {
-        List<Tarefa> todos = super.readAll();
-        todos.removeIf(t -> !t.isAtivo());
-        return todos;
-    }
-
-    // READ (Busca por Usuário - Relacionamento 1:N)
-    public List<Tarefa> listarPorUsuario(int idUsuario) throws IOException, ClassNotFoundException {
-        List<Tarefa> todas = listarTodosAtivos(); // Só lista tarefas ativas
-        List<Tarefa> filtrada = new ArrayList<>();
-        
-        // Simulação da busca usando o índice/relacionamento (Neste caso, lista sequencial)
-        for (Tarefa t : todas) {
-            if (t.getIdUsuario() == idUsuario) {
-                filtrada.add(t);
-            }
-        }
-        return filtrada;
-    }
-
-    // UPDATE
-    public boolean update(Tarefa t) throws IOException, ClassNotFoundException {
-        List<Tarefa> lista = readAll();
-        for (int i = 0; i < lista.size(); i++) {
-            if (lista.get(i).getId() == t.getId()) {
-                // Preserva o status ativo/inativo
-                t.setAtivo(lista.get(i).isAtivo());
-                lista.set(i, t);
-                salvar(lista);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // DELETE (Exclusão Lógica)
-    public boolean delete(int id) throws IOException, ClassNotFoundException {
-        List<Tarefa> lista = readAll();
-        for (Tarefa t : lista) {
-            if (t.getId() == id && t.isAtivo()) {
-                t.setAtivo(false);
-                salvar(lista);
-                return true;
-            }
-        }
-        return false;
-    }
+    return maxId;
+  }
 }

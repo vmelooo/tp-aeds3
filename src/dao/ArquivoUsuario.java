@@ -1,77 +1,124 @@
 package dao;
 
 import models.Usuario;
+import entidades.ArvoreBMais;
+import entidades.RegistroIndice;
+
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.List;
 
-public class ArquivoUsuario extends ArquivoGenerico<Usuario> {
+public class ArquivoUsuario {
 
-    public ArquivoUsuario(String arquivo) {
-        super(arquivo);
-    }
+  private final Arquivo<Usuario> arquivo;
+  private final ArvoreBMais<RegistroIndice> index;
+  private int proximoId;
 
-    // CREATE
-    public int create(Usuario u) throws IOException, ClassNotFoundException {
-        List<Usuario> lista = readAll();
-        // Gerar ID sequencial (muito simples e não escalável, mas ok para esta fase)
-        int id = lista.size() + 1; 
-        u.setId(id);
-        lista.add(u);
-        salvar(lista);
-        return id;
-    }
+  public ArquivoUsuario() throws Exception {
+    Constructor<Usuario> construtorHeap = Usuario.class.getConstructor();
+    this.arquivo = new Arquivo<>("usuarios.db", construtorHeap);
 
-    // READ (por ID)
-    public Usuario read(int id) throws IOException, ClassNotFoundException {
-        List<Usuario> lista = readAll();
-        for (Usuario u : lista) {
-            if (u.getId() == id && u.isAtivo()) {
-                return u;
-            }
-        }
-        return null; // Retorna null se não encontrar ou se estiver logicamente excluído
-    }
+    Constructor<RegistroIndice> construtorIndex = RegistroIndice.class.getConstructor();
+    this.index = new ArvoreBMais<>(construtorIndex, 4, "data/usuarios.idx");
 
-    // READ ALL (Todos, incluindo logicamente excluídos)
-    public List<Usuario> readAll() throws IOException, ClassNotFoundException {
-        // O readAll do ArquivoGenerico já faz isso, mas podemos filtrar se necessário
-        return super.readAll(); 
-    }
+    // TODO: maybe safeer a way of ids?
+    this.proximoId = getLastId() + 1;
+  }
+
+  // --- CRUD Methods ---
+
+  // CREATE
+  public int create(Usuario u) throws Exception {
+    u.setId(proximoId++);
     
-    // READ ALL ATIVOS (O mais usado na prática)
-    public List<Usuario> listarAtivos() throws IOException, ClassNotFoundException {
-        List<Usuario> todos = super.readAll();
-        // Filtra e retorna apenas os ativos
-        todos.removeIf(u -> !u.isAtivo());
-        return todos;
+    long pos = arquivo.create(u);
+
+    RegistroIndice indice = new RegistroIndice(u.getId(), pos);
+    index.create(indice);
+
+    return u.getId();
+  }
+
+  // READ (by ID) - INDEX FILE
+  public Usuario read(int id) throws Exception {
+    RegistroIndice indice = new RegistroIndice(id, -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return null;
     }
 
+    long pos = resultados.get(0).getPonteiro();
+    return arquivo.read(pos);
+  }
 
-    // UPDATE
-    public boolean update(Usuario u) throws IOException, ClassNotFoundException {
-        List<Usuario> lista = readAll();
-        for (int i = 0; i < lista.size(); i++) {
-            if (lista.get(i).getId() == u.getId()) {
-                // Preserva o status ativo/inativo que já estava no registro salvo
-                u.setAtivo(lista.get(i).isAtivo()); 
-                lista.set(i, u);
-                salvar(lista);
-                return true;
-            }
-        }
-        return false; // Usuário não encontrado para atualização
+  // UPDATE
+  public boolean update(Usuario usuarioAtualizado) throws Exception {
+    RegistroIndice indice = new RegistroIndice(usuarioAtualizado.getId(), -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return false;
     }
 
-    // DELETE (Exclusão Lógica)
-    public boolean delete(int id) throws IOException, ClassNotFoundException {
-        List<Usuario> lista = readAll();
-        for (Usuario u : lista) {
-            if (u.getId() == id && u.isAtivo()) {
-                u.setAtivo(false); // Marca como excluído
-                salvar(lista);
-                return true;
-            }
-        }
-        return false; // Usuário não encontrado ou já inativo
+    long pos = resultados.get(0).getPonteiro();
+
+    long newPos = arquivo.update(pos, usuarioAtualizado);
+
+    // different position means we add at the end.
+    if (newPos != pos) {
+      RegistroIndice newIndice = new RegistroIndice(usuarioAtualizado.getId(), newPos);
+      index.delete(indice);
+      index.create(newIndice);
     }
+
+    return true;
+  }
+
+  // DELETE (Logical)
+  public boolean delete(int id) throws Exception {
+    RegistroIndice indice = new RegistroIndice(id, -1);
+    ArrayList<RegistroIndice> resultados = index.read(indice);
+
+    if (resultados.isEmpty()) {
+      return false;
+    }
+
+    long pos = resultados.get(0).getPonteiro();
+    return arquivo.delete(pos);
+  }
+
+  // --- List Methods---
+
+  public List<Usuario> listarAtivos() throws IOException {
+    List<Usuario> lista = new ArrayList<>();
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
+
+    while (raf.getFilePointer() < raf.length()) {
+      long pos = raf.getFilePointer();
+      Usuario u = arquivo.read(pos);
+      if (u != null && u.isAtivo()) {
+        lista.add(u);
+      }
+    }
+    return lista;
+  }
+
+  private int getLastId() throws IOException {
+    int maxId = 0;
+    RandomAccessFile raf = arquivo.getFile();
+    raf.seek(0);
+
+    while (raf.getFilePointer() < raf.length()) {
+      long pos = raf.getFilePointer();
+      Usuario u = arquivo.read(pos);
+      if (u != null && u.getId() > maxId) {
+        maxId = u.getId();
+      }
+    }
+    return maxId;
+  }
 }
