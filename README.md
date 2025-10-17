@@ -12,6 +12,8 @@
 
 * [Git](https://git-scm.com/downloads)
 
+---
+
 ## Instalação e Uso
 
 1. Clone o repositório:
@@ -23,8 +25,10 @@
 3. Execute `java Main` para iniciar o projeto.
 4. Use o menu no terminal para executar as operações de CRUD.
 
-## Estrutura
+---
 
+## Estrutura
+```
 ├── data                       # Registros e arquivos de índices
 └── src                        # Código-fonte do projeto
     ├── Main.java              # Função principal a ser executada
@@ -34,3 +38,6 @@
     ├── models                 # Entidades do projeto
     │   └── structures         # Entidades de estruturas para chaves de pesquisa
     └── views                  # Interface do menu
+```
+
+---
