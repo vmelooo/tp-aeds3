@@ -30,6 +30,7 @@
 ## Estrutura
 ```
 .
+├── docs                        # Arquivos de documentação
 └── src                         # Código-fonte do projeto
     ├── Main.java               # Função principal a ser executada
     ├── controllers             # Controlador das operações do CRUD
