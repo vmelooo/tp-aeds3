@@ -30,14 +30,14 @@
 ## Estrutura
 ```
 .
-└── src                        # Código-fonte do projeto
-    ├── Main.java              # Função principal a ser executada
-    ├── controllers            # Controlador das operações do CRUD
-    ├── dao                    # Data Access Objects
-    ├── data                   # Registros e arquivos de índices 
-    ├── models                 # Entidades do projeto
-    │   └── structures         # Entidades de estruturas para chaves de pesquisa
-    └── views                  # Interface do menu
+└── src                         # Código-fonte do projeto
+    ├── Main.java               # Função principal a ser executada
+    ├── controllers             # Controlador das operações do CRUD
+    ├── dao                     # Data Access Objects
+    ├── data                    # Registros e arquivos de índices 
+    ├── models                  # Entidades do projeto
+    │   └── structures          # Entidades de estruturas para chaves de pesquisa
+    └── views                   # Interface do menu
 ```
 
 ---
