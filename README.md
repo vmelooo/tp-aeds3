@@ -33,7 +33,7 @@
 └── src                        # Código-fonte do projeto
     ├── Main.java              # Função principal a ser executada
     ├── controllers            # Controlador das operações do CRUD
-    ├── dao                    # Data Acess Objects
+    ├── dao                    # Data Access Objects
     ├── data
     ├── models                 # Entidades do projeto
     │   └── structures         # Entidades de estruturas para chaves de pesquisa
