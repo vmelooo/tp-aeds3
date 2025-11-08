@@ -1,26 +1,24 @@
 package models;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class StatusTarefa implements ArquivoBinario {
   private int id;
   private String cor;
   private int ordem;
-  private List<String> nomes; // Atributo multivalorado
-  private boolean ativo; // Adicionado para Exclusão Lógica
+  private String nome;  // único nome, não mais uma lista
+  private boolean ativo; // Exclusão lógica
 
   public StatusTarefa() {
     this.ativo = true;
     this.cor = "";
-    this.nomes = new ArrayList<>();
+    this.nome = "";
   }
 
-  public StatusTarefa(String cor, int ordem, List<String> nomes) {
+  public StatusTarefa(String cor, int ordem, String nome) {
     this.cor = cor;
     this.ordem = ordem;
-    this.nomes = nomes;
+    this.nome = nome;
     this.ativo = true;
   }
 
@@ -48,12 +46,12 @@ public class StatusTarefa implements ArquivoBinario {
     this.ordem = ordem;
   }
 
-  public List<String> getNomes() {
-    return nomes;
+  public String getNome() {
+    return nome;
   }
 
-  public void setNomes(List<String> nomes) {
-    this.nomes = nomes;
+  public void setNome(String nome) {
+    this.nome = nome;
   }
 
   // Getter e Setter para o campo ativo
@@ -74,16 +72,7 @@ public class StatusTarefa implements ArquivoBinario {
     dos.writeUTF(cor);
     dos.writeInt(ordem);
     dos.writeBoolean(ativo);
-
-    // make sure list exists before iterating or populating records
-    if (nomes == null) {
-      dos.writeInt(0);
-    } else {
-      dos.writeInt(nomes.size());
-      for (String nome : nomes) {
-        dos.writeUTF(nome);
-      }
-    }
+    dos.writeUTF(nome); // grava nome único
 
     return baos.toByteArray();
   }
@@ -97,18 +86,13 @@ public class StatusTarefa implements ArquivoBinario {
     this.cor = dis.readUTF();
     this.ordem = dis.readInt();
     this.ativo = dis.readBoolean();
-
-    // get entry count | read list
-    int numNomes = dis.readInt();
-    this.nomes = new ArrayList<>();
-    for (int i = 0; i < numNomes; i++) {
-      this.nomes.add(dis.readUTF());
-    }
+    this.nome = dis.readUTF(); // lê nome único
   }
 
   @Override
   public String toString() {
     String status = this.ativo ? "ATIVO" : "EXCLUÍDO (LÓGICO)";
-    return String.format("ID: %d | Nomes: %s | Cor: %s | Ordem: %d | Status: %s", id, nomes, cor, ordem, status);
+    return String.format("ID: %d | Nome: %s | Cor: %s | Ordem: %d | Status: %s",
+        id, nome, cor, ordem, status);
   }
 }

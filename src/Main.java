@@ -1,6 +1,5 @@
 import controllers.*;
 import dao.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import models.*;
@@ -70,7 +69,7 @@ public class Main {
             System.out.println("3 - Atualizar");
             System.out.println("4 - Deletar");
             System.out.println("5 - Listar");
-            System.out.println("6 - Voltar");
+            System.out.println("0 - Voltar");
             System.out.print("Escolha: ");
             opcao = sc.nextInt();
             sc.nextLine();
@@ -82,7 +81,7 @@ public class Main {
                 case 4 -> usuarioController.deletarUsuario();
                 case 5 -> usuarioController.listarUsuarios();
             }
-        } while (opcao != 6);
+        } while (opcao != 0);
     }
 
     private static void menuTarefas(TarefaController tarefaController) {
@@ -93,7 +92,7 @@ public class Main {
             System.out.println("2 - Listar por Usuário");
             System.out.println("3 - Atualizar");
             System.out.println("4 - Deletar");
-            System.out.println("5 - Voltar");
+            System.out.println("0 - Voltar");
             System.out.print("Escolha: ");
             opcao = sc.nextInt();
             sc.nextLine();
@@ -104,7 +103,7 @@ public class Main {
                 case 3 -> tarefaController.atualizarTarefa();
                 case 4 -> tarefaController.deletarTarefa();
             }
-        } while (opcao != 5);
+        } while (opcao != 0);
     }
 
     private static void menuStatus(StatusController statusController) {
@@ -115,7 +114,7 @@ public class Main {
             System.out.println("2 - Listar");
             System.out.println("3 - Atualizar");
             System.out.println("4 - Deletar");
-            System.out.println("5 - Voltar");
+            System.out.println("0 - Voltar");
             System.out.print("Escolha: ");
             opcao = sc.nextInt();
             sc.nextLine();
@@ -126,7 +125,7 @@ public class Main {
                 case 3 -> statusController.atualizarStatus();
                 case 4 -> statusController.deletarStatus();
             }
-        } while (opcao != 5);
+        } while (opcao != 0);
     }
 
     private static void menuCategorias(CategoriaController categoriaController, TarefaController tarefaController) {
@@ -136,7 +135,7 @@ public class Main {
             System.out.println("1 - Criar");
             System.out.println("2 - Listar");
             System.out.println("3 - Gerenciar Tarefas");
-            System.out.println("4 - Voltar");
+            System.out.println("0 - Voltar");
             System.out.print("Escolha: ");
             opcao = sc.nextInt();
             sc.nextLine();
@@ -146,7 +145,7 @@ public class Main {
                 case 2 -> categoriaController.listarCategorias();
                 case 3 -> tarefaController.gerenciarCategoriasTarefa();
             }
-        } while (opcao != 4);
+        } while (opcao != 0);
     }
 
     private static void menuApontamentos(ApontamentoController apontamentoController) {
@@ -158,7 +157,7 @@ public class Main {
             System.out.println("3 - Deletar");
             System.out.println("4 - Listar por Usuário");
             System.out.println("5 - Listar por Tarefa");
-            System.out.println("6 - Voltar");
+            System.out.println("0 - Voltar");
             System.out.print("Escolha: ");
             opcao = sc.nextInt();
             sc.nextLine();
@@ -170,21 +169,19 @@ public class Main {
                 case 4 -> apontamentoController.listarApontamentosPorUsuario();
                 case 5 -> apontamentoController.listarApontamentosPorTarefa();
             }
-        } while (opcao != 6);
+        } while (opcao != 0);
     }
 
     private static void inicializarStatusPadrao(ArquivoStatusTarefa arqS) throws Exception {
         List<StatusTarefa> lista = arqS.listarTodosAtivos();
         if (lista.isEmpty()) {
-            List<String> nomes1 = Arrays.asList("Pendente");
-            List<String> nomes2 = Arrays.asList("Em andamento");
-            List<String> nomes3 = Arrays.asList("Concluída");
-            arqS.create(new StatusTarefa("yellow", 1, nomes1));
-            arqS.create(new StatusTarefa("blue", 2, nomes2));
-            arqS.create(new StatusTarefa("green", 3, nomes3));
+            arqS.create(new StatusTarefa("yellow", 1, "Pendente"));
+            arqS.create(new StatusTarefa("blue", 2, "Em andamento"));
+            arqS.create(new StatusTarefa("green", 3, "Concluída"));
             System.out.println("Statuses padrões criados.");
         }
     }
+
 
     private static void inicializarCategoriasPadrao(ArquivoCategoria arqC) throws Exception {
         List<Categoria> lista = arqC.listarTodosAtivos();
