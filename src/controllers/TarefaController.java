@@ -1,10 +1,9 @@
 package controllers;
 
 import dao.*;
+import java.util.List;
 import models.*;
 import views.MenuView;
-
-import java.util.List;
 
 public class TarefaController {
 
@@ -88,7 +87,7 @@ public class TarefaController {
       view.exibirMensagem("Tarefas de " + u.getNome() + ":");
       for (Tarefa t : lista) {
         StatusTarefa s = arquivoStatus.read(t.getIdStatus());
-        String statusNome = (s != null && s.isAtivo()) ? s.getNomes().get(0) : "Status Inativo/Inexistente";
+        String statusNome = (s != null && s.isAtivo()) ? s.getNome() : "Status Inativo/Inexistente";
         view.exibirMensagem(String.format("ID: %d | Título: %s | Status: %s", t.getId(), t.getTitulo(), statusNome));
       }
 
@@ -262,7 +261,7 @@ public class TarefaController {
       view.exibirMensagem("Status ativos disponíveis:");
       for (StatusTarefa s : lista) {
         view.exibirMensagem(String.format("ID: %d -> Nomes: %s | Cor: %s | Ordem: %d",
-            s.getId(), s.getNomes(), s.getCor(), s.getOrdem()));
+            s.getId(), s.getNome(), s.getCor(), s.getOrdem()));
       }
     } catch (Exception e) {
       view.exibirErro("Falha ao listar status: " + e.getMessage());
