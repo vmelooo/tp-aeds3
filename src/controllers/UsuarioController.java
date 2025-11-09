@@ -125,4 +125,77 @@ public class UsuarioController {
             view.exibirErro("Falha ao listar usuários: " + e.getMessage());
         }
     }
+
+    /**
+     * Gerencia telefones de um usuário (atributo multivalorado)
+     */
+    public void gerenciarTelefones() {
+        try {
+            int id = view.lerInteiro("ID do Usuário para gerenciar telefones: ");
+            Usuario u = arquivoUsuario.read(id);
+
+            if (u == null) {
+                view.exibirMensagem("Usuário não encontrado ou está inativo.");
+                return;
+            }
+
+            view.exibirMensagem("\n--- Gerenciando Telefones de " + u.getNome() + " (ID " + id + ") ---");
+
+            // Exibe telefones atuais
+            List<String> telefones = u.getTelefones();
+            if (telefones.isEmpty()) {
+                view.exibirMensagem("Nenhum telefone cadastrado.");
+            } else {
+                view.exibirMensagem("Telefones atuais:");
+                for (int i = 0; i < telefones.size(); i++) {
+                    view.exibirMensagem((i + 1) + ". " + telefones.get(i));
+                }
+            }
+
+            view.exibirMensagem("\nAções:");
+            view.exibirMensagem("1 - Adicionar Telefone");
+            view.exibirMensagem("2 - Remover Telefone");
+            String opcao = view.lerTexto("Escolha uma opção (ou Enter para sair): ");
+
+            if (opcao.equals("1")) {
+                String telefone = view.lerTexto("Número de telefone: ");
+
+                if (telefone.isEmpty()) {
+                    view.exibirErro("Telefone não pode ser vazio.");
+                    return;
+                }
+
+                u.adicionarTelefone(telefone);
+
+                if (arquivoUsuario.update(u)) {
+                    view.exibirSucesso("Telefone adicionado com sucesso.");
+                } else {
+                    view.exibirErro("Falha ao atualizar usuário.");
+                }
+
+            } else if (opcao.equals("2")) {
+                if (telefones.isEmpty()) {
+                    view.exibirMensagem("Não há telefones para remover.");
+                    return;
+                }
+
+                String telefone = view.lerTexto("Número de telefone a remover: ");
+
+                if (u.removerTelefone(telefone)) {
+                    if (arquivoUsuario.update(u)) {
+                        view.exibirSucesso("Telefone removido com sucesso.");
+                    } else {
+                        view.exibirErro("Falha ao atualizar usuário.");
+                    }
+                } else {
+                    view.exibirErro("Telefone não encontrado.");
+                }
+            }
+
+        } catch (NumberFormatException e) {
+            view.exibirErro("ID inválido.");
+        } catch (Exception e) {
+            view.exibirErro("Falha ao gerenciar telefones: " + e.getMessage());
+        }
+    }
 }

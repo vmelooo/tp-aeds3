@@ -16,7 +16,7 @@ public class Main {
             ArquivoStatusTarefa arqS = new ArquivoStatusTarefa();
             ArquivoCategoria arqC = new ArquivoCategoria();
             ArquivoApontamentoDeHoras arqA = new ArquivoApontamentoDeHoras();
-            ArquivoTarefaCategoria arqTC = new ArquivoTarefaCategoria();
+            ArquivoTarefaCategoriaHash arqTC = new ArquivoTarefaCategoriaHash();
 
             MenuView view = new MenuView(sc);
 
@@ -69,6 +69,7 @@ public class Main {
             System.out.println("3 - Atualizar");
             System.out.println("4 - Deletar");
             System.out.println("5 - Listar");
+            System.out.println("6 - Gerenciar Telefones");
             System.out.println("0 - Voltar");
             System.out.print("Escolha: ");
             opcao = sc.nextInt();
@@ -80,6 +81,7 @@ public class Main {
                 case 3 -> usuarioController.atualizarUsuario();
                 case 4 -> usuarioController.deletarUsuario();
                 case 5 -> usuarioController.listarUsuarios();
+                case 6 -> usuarioController.gerenciarTelefones();
             }
         } while (opcao != 0);
     }

@@ -11,12 +11,12 @@ public class TarefaController {
   private final ArquivoUsuario arquivoUsuario;
   private final ArquivoStatusTarefa arquivoStatus;
   private final ArquivoCategoria arquivoCategoria;
-  private final ArquivoTarefaCategoria arquivoTarefaCategoria;
+  private final ArquivoTarefaCategoriaHash arquivoTarefaCategoria;
   private final MenuView view;
 
   public TarefaController(ArquivoTarefa arquivoTarefa, ArquivoUsuario arquivoUsuario,
       ArquivoStatusTarefa arquivoStatus, ArquivoCategoria arquivoCategoria,
-      ArquivoTarefaCategoria arquivoTarefaCategoria, MenuView view) {
+      ArquivoTarefaCategoriaHash arquivoTarefaCategoria, MenuView view) {
     this.arquivoTarefa = arquivoTarefa;
     this.arquivoUsuario = arquivoUsuario;
     this.arquivoStatus = arquivoStatus;
@@ -232,14 +232,9 @@ public class TarefaController {
       } else if (opcao.equals("2")) {
         int idCategoria = view.lerInteiro("ID da Categoria a remover: ");
 
-        // FIX 2: Find the relationship object first to get its ID, then delete
-        TarefaCategoria tcParaDeletar = arquivoTarefaCategoria.read(idTarefa, idCategoria);
-        if (tcParaDeletar != null) {
-          if (arquivoTarefaCategoria.delete(tcParaDeletar.getId())) {
-            view.exibirSucesso("Relacionamento removido logicamente.");
-          } else {
-            view.exibirErro("Falha ao remover relacionamento.");
-          }
+        // Com Hash Extensível, podemos deletar diretamente pela chave composta
+        if (arquivoTarefaCategoria.delete(idTarefa, idCategoria)) {
+          view.exibirSucesso("Relacionamento removido logicamente.");
         } else {
           view.exibirErro("Relacionamento não encontrado.");
         }
