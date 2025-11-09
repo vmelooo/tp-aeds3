@@ -1,14 +1,14 @@
 package dao;
 
-import models.Usuario;
-import models.structures.ArvoreBMais;
-import models.structures.RegistroIndice;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+
+import models.Usuario;
+import models.structures.ArvoreBMais;
+import models.structures.RegistroIndice;
 
 public class ArquivoUsuario {
 
@@ -32,7 +32,7 @@ public class ArquivoUsuario {
   // CREATE
   public int create(Usuario u) throws Exception {
     u.setId(proximoId++);
-    
+
     long pos = arquivo.create(u);
 
     RegistroIndice indice = new RegistroIndice(u.getId(), pos);
@@ -99,9 +99,17 @@ public class ArquivoUsuario {
 
     while (raf.getFilePointer() < raf.length()) {
       long pos = raf.getFilePointer();
-      Usuario u = arquivo.read(pos);
-      if (u != null && u.isAtivo()) {
-        lista.add(u);
+
+      boolean isExcluded = raf.readBoolean();
+      int size = raf.readInt();
+
+      if (!isExcluded) {
+        Usuario u = arquivo.read(pos);
+        if (u != null && u.isAtivo()) {
+          lista.add(u);
+        }
+      } else {
+        raf.skipBytes(size);
       }
     }
     return lista;
@@ -114,9 +122,20 @@ public class ArquivoUsuario {
 
     while (raf.getFilePointer() < raf.length()) {
       long pos = raf.getFilePointer();
-      Usuario u = arquivo.read(pos);
-      if (u != null && u.getId() > maxId) {
-        maxId = u.getId();
+
+      // Ler estrutura do registro para avançar o ponteiro corretamente
+      boolean isExcluded = raf.readBoolean();
+      int size = raf.readInt();
+
+      if (!isExcluded) {
+        // Voltar para o início do registro e usar o método read normal
+        Usuario u = arquivo.read(pos);
+        if (u != null && u.getId() > maxId) {
+          maxId = u.getId();
+        }
+      } else {
+        // Pular os bytes do registro excluído
+        raf.skipBytes(size);
       }
     }
     return maxId;
