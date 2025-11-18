@@ -46,11 +46,13 @@ public class Arquivo<T extends ArquivoBinario> {
     file.seek(pos);
 
     boolean isExcluded = file.readBoolean();
+    int size = file.readInt();
+
     if (isExcluded) {
+      file.skipBytes(size);
       return null;
     }
 
-    int size = file.readInt();
     byte[] recordBytes = new byte[size];
     file.readFully(recordBytes);
 
