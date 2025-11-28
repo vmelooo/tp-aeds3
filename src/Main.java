@@ -1,8 +1,11 @@
 import controllers.*;
 import dao.*;
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import models.*;
+import models.structures.Compressor;
 import views.MenuView;
 
 public class Main {
@@ -37,6 +40,8 @@ public class Main {
                 System.out.println("3 - Status");
                 System.out.println("4 - Categorias");
                 System.out.println("5 - Apontamentos");
+                System.out.println("6 - Compactar arquivos");
+                System.out.println("7 - Descompactar arquivos");
                 System.out.println("0 - Sair");
                 System.out.print("Escolha: ");
                 opcao = sc.nextInt();
@@ -48,10 +53,47 @@ public class Main {
                     case 3 -> menuStatus(statusController);
                     case 4 -> menuCategorias(categoriaController, tarefaController);
                     case 5 -> menuApontamentos(apontamentoController);
-                    case 0 -> System.out.println("Tchau!");
-                    default -> System.out.println("Opção inválida!");
+                    case 6 -> {
+            try {
+                File pasta = new File("data");
+                File[] arqs = pasta.listFiles((d, n) -> n.endsWith(".db") || n.endsWith(".idx"));
+
+                if (arqs == null || arqs.length == 0) {
+                    System.out.println("Nenhum arquivo .db ou .idx encontrado.");
+                } else {
+                    File saida = new File("data/backup.huff");
+                    Compressor.compactarArquivos(Arrays.asList(arqs), saida);
+                    System.out.println("Arquivos compactados com sucesso.");
                 }
-            } while (opcao != 0);
+
+            } catch (Exception e) {
+                System.out.println("Erro ao compactar: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        case 7 -> {
+            try {
+                File arquivoCompactado = new File("data/backup.huff");
+                if (!arquivoCompactado.exists()) {
+                    System.out.println("Arquivo compactado não encontrado.");
+                } else {
+                    Compressor.descompactarArquivos(arquivoCompactado, new File("data"));
+                    System.out.println("Arquivos descompactados com sucesso.");
+                }
+
+            } catch (Exception e) {
+                System.out.println("Erro ao descompactar: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        case 0 -> System.out.println("Tchau!");
+
+        default -> System.out.println("Opção inválida!");
+    }
+
+} while (opcao != 0);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -169,9 +211,47 @@ public class Main {
                 case 2 -> apontamentoController.listarApontamentos();
                 case 3 -> apontamentoController.deletarApontamento();
                 case 4 -> apontamentoController.listarApontamentosPorUsuario();
-                case 5 -> apontamentoController.listarApontamentosPorTarefa();
+                case 5 -> apontamentoController.listarApontamentosPorTarefa(); case 6 -> {
+            try {
+                File pasta = new File("data");
+                File[] arqs = pasta.listFiles((d, n) -> n.endsWith(".db") || n.endsWith(".idx"));
+
+                if (arqs == null || arqs.length == 0) {
+                    System.out.println("Nenhum arquivo .db ou .idx encontrado.");
+                } else {
+                    File saida = new File("data/backup.huff");
+                    Compressor.compactarArquivos(Arrays.asList(arqs), saida);
+                    System.out.println("Arquivos compactados com sucesso.");
+                }
+
+            } catch (Exception e) {
+                System.out.println("Erro ao compactar: " + e.getMessage());
+                e.printStackTrace();
             }
-        } while (opcao != 0);
+        }
+
+        case 7 -> {
+            try {
+                File arquivoCompactado = new File("data/backup.huff");
+                if (!arquivoCompactado.exists()) {
+                    System.out.println("Arquivo compactado não encontrado.");
+                } else {
+                    Compressor.descompactarArquivos(arquivoCompactado, new File("data"));
+                    System.out.println("Arquivos descompactados com sucesso.");
+                }
+
+            } catch (Exception e) {
+                System.out.println("Erro ao descompactar: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        case 0 -> System.out.println("Tchau!");
+
+        default -> System.out.println("Opção inválida!");
+    }
+
+} while (opcao != 0);
     }
 
     private static void inicializarStatusPadrao(ArquivoStatusTarefa arqS) throws Exception {
