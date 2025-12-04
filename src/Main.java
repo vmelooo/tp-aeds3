@@ -53,47 +53,13 @@ public class Main {
                     case 3 -> menuStatus(statusController);
                     case 4 -> menuCategorias(categoriaController, tarefaController);
                     case 5 -> menuApontamentos(apontamentoController);
-                    case 6 -> {
-            try {
-                File pasta = new File("data");
-                File[] arqs = pasta.listFiles((d, n) -> n.endsWith(".db") || n.endsWith(".idx"));
-
-                if (arqs == null || arqs.length == 0) {
-                    System.out.println("Nenhum arquivo .db ou .idx encontrado.");
-                } else {
-                    File saida = new File("data/backup.huff");
-                    Compressor.compactarArquivos(Arrays.asList(arqs), saida);
-                    System.out.println("Arquivos compactados com sucesso.");
+                    case 6 -> menuCompactar(); // Chama o novo submenu de compactação
+                    case 7 -> menuDescompactar(); // Chama o novo submenu de descompactação
+                    case 0 -> System.out.println("Tchau!");
+                    default -> System.out.println("Opção inválida!");
                 }
 
-            } catch (Exception e) {
-                System.out.println("Erro ao compactar: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
-        case 7 -> {
-            try {
-                File arquivoCompactado = new File("data/backup.huff");
-                if (!arquivoCompactado.exists()) {
-                    System.out.println("Arquivo compactado não encontrado.");
-                } else {
-                    Compressor.descompactarArquivos(arquivoCompactado, new File("data"));
-                    System.out.println("Arquivos descompactados com sucesso.");
-                }
-
-            } catch (Exception e) {
-                System.out.println("Erro ao descompactar: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
-        case 0 -> System.out.println("Tchau!");
-
-        default -> System.out.println("Opção inválida!");
-    }
-
-} while (opcao != 0);
+            } while (opcao != 0);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -101,6 +67,112 @@ public class Main {
             sc.close();
         }
     }
+
+    // --- NOVOS MÉTODOS DE MENU PARA COMPRESSÃO ---
+
+    private static void menuCompactar() {
+        System.out.println("\n--- COMPACTAR ARQUIVOS ---");
+        System.out.println("1 - Usando Huffman (backup.huff)");
+        System.out.println("2 - Usando LZW (backup.lzw)");
+        System.out.println("0 - Voltar");
+        System.out.print("Escolha: ");
+        int opcao = sc.nextInt();
+        sc.nextLine();
+
+        if (opcao == 1) {
+            compactarHuffman();
+        } else if (opcao == 2) {
+            compactarLZW();
+        } else if (opcao != 0) {
+            System.out.println("Opção inválida!");
+        }
+    }
+
+    private static void menuDescompactar() {
+        System.out.println("\n--- DESCOMPACTAR ARQUIVOS ---");
+        System.out.println("1 - Descompactar Huffman (backup.huff)");
+        System.out.println("2 - Descompactar LZW (backup.lzw)");
+        System.out.println("0 - Voltar");
+        System.out.print("Escolha: ");
+        int opcao = sc.nextInt();
+        sc.nextLine();
+
+        if (opcao == 1) {
+            descompactarHuffman();
+        } else if (opcao == 2) {
+            descompactarLZW();
+        } else if (opcao != 0) {
+            System.out.println("Opção inválida!");
+        }
+    }
+
+    private static void compactarHuffman() {
+        try {
+            File pasta = new File("data");
+            File[] arqs = pasta.listFiles((d, n) -> n.endsWith(".db") || n.endsWith(".idx"));
+
+            if (arqs == null || arqs.length == 0) {
+                System.out.println("Nenhum arquivo .db ou .idx encontrado.");
+            } else {
+                File saida = new File("data/backup.huff");
+                Compressor.compactarArquivos(Arrays.asList(arqs), saida);
+                System.out.println("Arquivos compactados com sucesso usando Huffman.");
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao compactar com Huffman: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void descompactarHuffman() {
+        try {
+            File arquivoCompactado = new File("data/backup.huff");
+            if (!arquivoCompactado.exists()) {
+                System.out.println("Arquivo compactado 'backup.huff' não encontrado.");
+            } else {
+                Compressor.descompactarArquivos(arquivoCompactado, new File("data"));
+                System.out.println("Arquivos descompactados com sucesso usando Huffman.");
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao descompactar com Huffman: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void compactarLZW() {
+        try {
+            File pasta = new File("data");
+            File[] arqs = pasta.listFiles((d, n) -> n.endsWith(".db") || n.endsWith(".idx"));
+
+            if (arqs == null || arqs.length == 0) {
+                System.out.println("Nenhum arquivo .db ou .idx encontrado.");
+            } else {
+                File saida = new File("data/backup.lzw");
+                Compressor.compactarArquivosLZW(Arrays.asList(arqs), saida);
+                System.out.println("Arquivos compactados com sucesso usando LZW.");
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao compactar com LZW: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void descompactarLZW() {
+        try {
+            File arquivoCompactado = new File("data/backup.lzw");
+            if (!arquivoCompactado.exists()) {
+                System.out.println("Arquivo compactado 'backup.lzw' não encontrado.");
+            } else {
+                Compressor.descompactarArquivosLZW(arquivoCompactado, new File("data"));
+                System.out.println("Arquivos descompactados com sucesso usando LZW.");
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao descompactar com LZW: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // --- MÉTODOS DE MENU EXISTENTES ---
 
     private static void menuUsuarios(UsuarioController usuarioController) {
         int opcao;
@@ -112,7 +184,6 @@ public class Main {
             System.out.println("4 - Deletar");
             System.out.println("5 - Listar");
             System.out.println("6 - Gerenciar Telefones");
-            // DEBUG: added 7 for testing
             System.out.println("7 - Buscar por Padrão");
             System.out.println("0 - Voltar");
             System.out.print("Escolha: ");
@@ -214,47 +285,10 @@ public class Main {
                 case 2 -> apontamentoController.listarApontamentos();
                 case 3 -> apontamentoController.deletarApontamento();
                 case 4 -> apontamentoController.listarApontamentosPorUsuario();
-                case 5 -> apontamentoController.listarApontamentosPorTarefa(); case 6 -> {
-            try {
-                File pasta = new File("data");
-                File[] arqs = pasta.listFiles((d, n) -> n.endsWith(".db") || n.endsWith(".idx"));
-
-                if (arqs == null || arqs.length == 0) {
-                    System.out.println("Nenhum arquivo .db ou .idx encontrado.");
-                } else {
-                    File saida = new File("data/backup.huff");
-                    Compressor.compactarArquivos(Arrays.asList(arqs), saida);
-                    System.out.println("Arquivos compactados com sucesso.");
-                }
-
-            } catch (Exception e) {
-                System.out.println("Erro ao compactar: " + e.getMessage());
-                e.printStackTrace();
+                case 5 -> apontamentoController.listarApontamentosPorTarefa();
+                // Removido o código de compressão/descompressão repetido aqui
             }
-        }
-
-        case 7 -> {
-            try {
-                File arquivoCompactado = new File("data/backup.huff");
-                if (!arquivoCompactado.exists()) {
-                    System.out.println("Arquivo compactado não encontrado.");
-                } else {
-                    Compressor.descompactarArquivos(arquivoCompactado, new File("data"));
-                    System.out.println("Arquivos descompactados com sucesso.");
-                }
-
-            } catch (Exception e) {
-                System.out.println("Erro ao descompactar: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
-        case 0 -> System.out.println("Tchau!");
-
-        default -> System.out.println("Opção inválida!");
-    }
-
-} while (opcao != 0);
+        } while (opcao != 0);
     }
 
     private static void inicializarStatusPadrao(ArquivoStatusTarefa arqS) throws Exception {
@@ -266,7 +300,6 @@ public class Main {
             System.out.println("Statuses padrões criados.");
         }
     }
-
 
     private static void inicializarCategoriasPadrao(ArquivoCategoria arqC) throws Exception {
         List<Categoria> lista = arqC.listarTodosAtivos();
