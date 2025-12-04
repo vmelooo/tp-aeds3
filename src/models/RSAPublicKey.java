@@ -4,7 +4,7 @@ import java.math.BigInteger;
 
 public class RSAPublicKey {
   private final BigInteger pubExp; // public exponent
-  private final BigInteger mod; // modulus
+  private final BigInteger mod;
 
   public RSAPublicKey(BigInteger e, BigInteger n) {
     this.pubExp = e;

@@ -215,6 +215,7 @@ public class UsuarioController {
     }
   }
 
+  
   public void buscarPorPadrao() {
     try {
       String padrao = view.lerTexto("Digite o padrão (texto) para buscar nos nomes: ");

@@ -170,18 +170,18 @@ public class RSAOperations {
     byte[] bytes = message.getBytes(StandardCharsets.UTF_8);
     BigInteger m = new BigInteger(1, bytes);
 
-    if (m.compareTo(publicKey.getN()) >= 0) {
+    if (m.compareTo(publicKey.getMod()) >= 0) {
       throw new IllegalArgumentException("Message too long for key size");
     }
 
-    return modPow(m, publicKey.getE(), publicKey.getN());
+    return modPow(m, publicKey.getPubExp(), publicKey.getMod());
   }
 
   /**
    * Decrypt a ciphertext using private key
    */
   public static String decrypt(BigInteger ciphertext, RSAPrivateKey privateKey) {
-    BigInteger m = modPow(ciphertext, privateKey.getD(), privateKey.getN());
+    BigInteger m = modPow(ciphertext, privateKey.getPrivExp(), privateKey.getMod());
     byte[] bytes = m.toByteArray();
     return new String(bytes, StandardCharsets.UTF_8);
   }

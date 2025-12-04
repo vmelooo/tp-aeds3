@@ -30,13 +30,13 @@ public class RSAController {
     try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(KEY_FILE))) {
       // Save Public Key (e, n)
       RSAPublicKey pub = keyPair.getPublicKey();
-      writeBigInteger(dos, pub.getE());
-      writeBigInteger(dos, pub.getN());
+      writeBigInteger(dos, pub.getPubExp());
+      writeBigInteger(dos, pub.getMod());
 
       // Save Private Key (d, n)
       RSAPrivateKey priv = keyPair.getPrivateKey();
-      writeBigInteger(dos, priv.getD());
-      writeBigInteger(dos, priv.getN());
+      writeBigInteger(dos, priv.getPrivExp());
+      writeBigInteger(dos, priv.getMod());
 
     } catch (IOException e) {
       System.err.println("Erro ao salvar chaves RSA: " + e.getMessage());
@@ -167,7 +167,7 @@ public class RSAController {
    */
   public String exportPublicKey() {
     RSAPublicKey pubKey = getPublicKey();
-    return pubKey.getE() + ":" + pubKey.getN();
+    return pubKey.getPubExp() + ":" + pubKey.getMod();
   }
 
   /**
@@ -175,7 +175,7 @@ public class RSAController {
    */
   public String exportPrivateKey() {
     RSAPrivateKey privKey = getPrivateKey();
-    return privKey.getD() + ":" + privKey.getN();
+    return privKey.getPrivExp() + ":" + privKey.getMod();
   }
 
   /**
