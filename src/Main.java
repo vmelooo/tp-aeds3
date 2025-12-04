@@ -112,6 +112,8 @@ public class Main {
             System.out.println("4 - Deletar");
             System.out.println("5 - Listar");
             System.out.println("6 - Gerenciar Telefones");
+            // DEBUG: added 7 for testing
+            System.out.println("7 - Buscar por Padrão");
             System.out.println("0 - Voltar");
             System.out.print("Escolha: ");
             opcao = sc.nextInt();
@@ -124,6 +126,7 @@ public class Main {
                 case 4 -> usuarioController.deletarUsuario();
                 case 5 -> usuarioController.listarUsuarios();
                 case 6 -> usuarioController.gerenciarTelefones();
+                case 7 -> usuarioController.buscarPorPadrao();
             }
         } while (opcao != 0);
     }
