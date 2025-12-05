@@ -64,6 +64,21 @@ public class MainView extends Application {
         primaryStage.show();
     }
 
+    public void reinitializeDAOs() throws Exception {
+        initializeDAOs();
+        // Refresh login view with new DAOs if currently on login screen
+        if (primaryStage.getScene() == loginScene) {
+             LoginView loginView = new LoginView(primaryStage, arqU, this);
+             loginScene = loginView.createLoginScene();
+             primaryStage.setScene(loginScene);
+        }
+    }
+    
+    // LoginView reloading
+    public ArquivoUsuario getArquivoUsuario() {
+        return arqU;
+    }
+
     private void initializeDAOs() throws Exception {
         arqU = new ArquivoUsuario();
         arqT = new ArquivoTarefa();
