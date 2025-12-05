@@ -31,14 +31,16 @@
 ## Estrutura
 ```
 .
+├── data                        # Registros e arquivos de índices 
 ├── docs                        # Arquivos de documentação
 └── src                         # Código-fonte do projeto
-    ├── Main.java               # Função principal a ser executada
+    ├── Main.java               # Função principal a ser executada (CLI)
+    ├── MainJavaFX.java         # Função principal a ser executada (GUI)
     ├── controllers             # Controlador das operações do CRUD
     ├── dao                     # Data Access Objects
-    ├── data                    # Registros e arquivos de índices 
     ├── models                  # Entidades do projeto
     │   └── structures          # Entidades de estruturas para chaves de pesquisa
+    ├── utils                   # Funções utilitárias e auxiliaries
     └── views                   # Interface do menu
 ```
 
