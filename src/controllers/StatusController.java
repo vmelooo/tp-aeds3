@@ -15,6 +15,11 @@ public class StatusController {
     this.view = view;
   }
 
+  // Getter para ArquivoStatus
+  public ArquivoStatusTarefa getArquivoStatus() {
+    return arquivoStatus;
+  }
+
   // CREATE
   public void criarStatus() {
     try {

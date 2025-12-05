@@ -16,6 +16,11 @@ public class CategoriaController {
         this.view = view;
     }
 
+    // Getter para ArquivoCategoria
+    public ArquivoCategoria getArquivoCategoria() {
+        return arquivoCategoria;
+    }
+
     /**
      * CREATE - Cria uma nova categoria
      */

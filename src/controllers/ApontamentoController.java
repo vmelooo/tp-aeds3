@@ -23,6 +23,11 @@ public class ApontamentoController {
         this.view = view;
     }
 
+    // Getter para ArquivoApontamento
+    public ArquivoApontamentoDeHoras getArquivoApontamento() {
+        return arquivoApontamento;
+    }
+
     /**
      * CREATE - Cria um novo apontamento
      */

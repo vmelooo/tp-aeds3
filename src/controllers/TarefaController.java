@@ -25,6 +25,11 @@ public class TarefaController {
     this.view = view;
   }
 
+  // Getter para ArquivoTarefa
+  public ArquivoTarefa getArquivoTarefa() {
+    return arquivoTarefa;
+  }
+
   // CREATE
   public void criarTarefa() {
     try {
