@@ -19,11 +19,9 @@
 1. Clone o repositório:
     ```bash
     git clone https://github.com/vmelooo/tp-aeds3.git
-    cd tp-aeds3/src
+    cd tp-aeds3
     ```
-2. Execute `javac Main.java` para compilar o projeto.
-3. Execute `java Main` para iniciar o projeto.
-4. Use o menu no terminal para executar as operações de CRUD.
+2. Execute `mvn clean javafx:run` para compilar e iniciar o projeto.
 
 ---
 
