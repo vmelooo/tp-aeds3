@@ -1,1 +1,12 @@
-*.class
+.direnv/
+.git/
+**/bin/
+**/data/
+*/.settings
+*/target
+*/.classpath
+*/.project
+**/*.class
+
+.env
+.envrc
