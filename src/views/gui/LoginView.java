@@ -12,7 +12,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import java.io.File;
 import models.Usuario;
+import models.structures.Compressor;
+
 import utils.SessionManager;
 
 import java.util.List;
@@ -173,9 +176,116 @@ public class LoginView {
             messageLabel
         );
 
+        
+        File huffFile = findBackupFile(".huff");
+        File lzwFile = findBackupFile(".lzw");
+        if (huffFile != null) {
+            Button descompactarButton = new Button("Descompactar Huff");
+            descompactarButton.setMaxWidth(Double.MAX_VALUE);
+            descompactarButton.setStyle(
+                "-fx-background-color: #ab4642; " +
+                "-fx-text-fill: white; " +
+                "-fx-font-size: 14; " +
+                "-fx-font-weight: bold; " +
+                "-fx-padding: 12; " +
+                "-fx-background-radius: 8; " +
+                "-fx-cursor: hand;"
+            );
+            descompactarButton.setOnAction(e ->decompressHuff(huffFile));
+            loginCard.getChildren().add(descompactarButton);
+        } else if (lzwFile != null) {
+            Button descompactarButton = new Button("Descompactar LZW");
+            descompactarButton.setMaxWidth(Double.MAX_VALUE);
+            descompactarButton.setStyle(
+                "-fx-background-color: #ab4642; " +
+                "-fx-text-fill: white; " +
+                "-fx-font-size: 14; " +
+                "-fx-font-weight: bold; " +
+                "-fx-padding: 12; " +
+                "-fx-background-radius: 8; " +
+                "-fx-cursor: hand;"
+            );
+            descompactarButton.setOnAction(e -> decompressLZW(lzwFile));
+            loginCard.getChildren().add(descompactarButton);
+        }
+
         root.setCenter(loginCard);
 
         return new Scene(root, 1000, 600);
+    }
+
+    private File findBackupFile(String extension) {
+        File dataDir = new File("data");
+        if (dataDir.exists() && dataDir.isDirectory()) {
+            File[] files = dataDir.listFiles((dir, name) -> 
+                name.toLowerCase().endsWith(extension)
+            );
+            // Coalesce to first match if array is not empty
+            if (files != null && files.length > 0) {
+                return files[0];
+            }
+        }
+        return null;
+    }
+
+    private void decompressHuff(File arquivoCompactado) {
+        try {
+            Compressor.descompactarArquivos(arquivoCompactado, new File("data"));
+        
+            // Refresh UI/DAOs after decompression
+            mainView.reinitializeDAOs();
+            showAlert(Alert.AlertType.INFORMATION, "Success", "Huffman backup restored!");
+        
+            // Reload Scene
+            LoginView newLogin = new LoginView(primaryStage, mainView.getArquivoUsuario(), mainView);
+            primaryStage.setScene(newLogin.createLoginScene());
+        
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Huffman decompression failed.");
+        }
+    }
+
+    private void decompressLZW(File arquivoCompactado) {
+        try {
+            Compressor.descompactarArquivosLZW(arquivoCompactado, new File("data"));
+        
+            // Refresh UI/DAOs after decompression
+            mainView.reinitializeDAOs();
+            showAlert(Alert.AlertType.INFORMATION, "Success", "LZW backup restored!");
+        
+            // Reload Scene
+            LoginView newLogin = new LoginView(primaryStage, mainView.getArquivoUsuario(), mainView);
+            primaryStage.setScene(newLogin.createLoginScene());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "LZW decompression failed.");
+        }
+    }    
+
+    // OLD, unused.
+    private void showDecompressionDialog() {
+        CompressionView cv = new CompressionView(mainView);
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Recuperar Backup");
+        dialog.setHeaderText("Arquivos compactados detectados. Deseja descompactar?");
+        
+        ScrollPane pane = (ScrollPane) cv.createView("interactive");
+        pane.setPrefSize(600, 400);
+        
+        dialog.getDialogPane().setContent(pane);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        
+        dialog.showAndWait();
+
+        try {
+            mainView.reinitializeDAOs();
+            showAlert(Alert.AlertType.INFORMATION, "Sistema Atualizado", "Sistema de arquivos recarregado.");
+            primaryStage.setScene(new LoginView(primaryStage, mainView.getArquivoUsuario(), mainView).createLoginScene());
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Erro", "Falha ao recarregar dados: " + e.getMessage());
+        }
     }
 
     private void handleLogin(String login, String senha, Label messageLabel) {

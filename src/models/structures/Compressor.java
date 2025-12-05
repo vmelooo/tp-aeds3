@@ -48,9 +48,32 @@ public class Compressor {
         oos.close();
 
         // 3. Apagar arquivos originais
-        for (File f : arquivos) if (f.exists()) f.delete();
+        // for (File f : arquivos) if (f.exists()) f.delete();
     }
 
+    static void deleteFiles(File path) throws IOException {
+        if (path == null || !path.exists()) {
+            throw new IOException("Directory does not exist: " + path);
+        }
+
+        try {
+            File[] arqs = path.listFiles((d, n) -> 
+                n.endsWith(".db") || n.endsWith(".hash") || n.endsWith(".idx"));
+
+            if (arqs == null) {
+                throw new IOException("Failed to list files. Path might not be a directory or IO error occurred.");
+            }
+
+            for (File f : arqs) {
+                boolean success = f.delete();
+                if (!success) {
+                    throw new IOException("Failed to delete: " + f.getName());
+                }
+            }
+        } catch (SecurityException e) {
+            throw new IOException("Permission denied while accessing files.", e);
+        }
+    }
 
     public static void descompactarArquivos(File arquivoCompactado, File pastaSaida) throws Exception {
 
@@ -63,6 +86,7 @@ public class Compressor {
         // Nota: Assumindo que VetorDeBits.toString() está ok para alimentar Huffman.decodifica
         byte[] dados = Huffman.decodifica(new VetorDeBits(vetorBytes).toString(), codigos);
 
+        deleteFiles(pastaSaida);
         reconstruirArquivos(dados, arquivoCompactado, pastaSaida);
 
         // Apaga o arquivo compactado
@@ -98,7 +122,7 @@ public class Compressor {
         oos.close();
 
         // 4. Apagar arquivos originais
-        for (File f : arquivos) if (f.exists()) f.delete();
+        // for (File f : arquivos) if (f.exists()) f.delete();
     }
 
     public static void descompactarArquivosLZW(File arquivoCompactado, File pastaSaida) throws Exception {
@@ -110,6 +134,7 @@ public class Compressor {
         // 1. Decodificação LZW
         byte[] dados = LZW.decodifica(dadosCodificados);
 
+        deleteFiles(pastaSaida);
         reconstruirArquivos(dados, arquivoCompactado, pastaSaida);
 
         // Apaga o arquivo compactado

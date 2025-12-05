@@ -250,39 +250,40 @@ public class CompressionView {
 
             new Thread(() -> {
                 try {
-                    long startTime = System.currentTimeMillis();
-
                     File pasta = new File("data");
-                    File[] arqs = pasta.listFiles((d, n) -> n.endsWith(".db") || n.endsWith(".idx"));
-
-                    if (arqs == null || arqs.length == 0) {
-                        javafx.application.Platform.runLater(() -> {
-                            statusLabel.setText("❌ Nenhum arquivo encontrado!");
-                            statusLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #f44336;");
-                            progressBar.setVisible(false);
-                            startBtn.setDisable(false);
-                        });
-                        return;
-                    }
-
-                    long tamanhoOriginal = 0;
-                    for (File f : arqs) {
-                        tamanhoOriginal += f.length();
-                    }
-
-                    final long tamanhoOriginalFinal = tamanhoOriginal;
-
-                    javafx.application.Platform.runLater(() -> {
-                        detailsLabel.setText(String.format(
-                            "Encontrados %d arquivos | Tamanho total: %s",
-                            arqs.length, formatBytes(tamanhoOriginalFinal)
-                        ));
-                        updateStatCard(statCards[0], formatBytes(tamanhoOriginalFinal));
-                    });
-
-                    Thread.sleep(500); // Pausa dramática
-
+                    long startTime = System.currentTimeMillis();
+                   
                     if (isCompress) {
+
+                        File[] arqs = pasta.listFiles((d, n) -> n.endsWith(".db") || n.endsWith(".idx"));
+
+                        if (arqs == null || arqs.length == 0) {
+                            javafx.application.Platform.runLater(() -> {
+                                statusLabel.setText("❌ Nenhum arquivo encontrado!");
+                                statusLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #f44336;");
+                                progressBar.setVisible(false);
+                                startBtn.setDisable(false);
+                            });
+                            return;
+                        }
+
+                        long tamanhoOriginal = 0;
+                        for (File f : arqs) {
+                            tamanhoOriginal += f.length();
+                        }
+
+                        final long tamanhoOriginalFinal = tamanhoOriginal;
+
+                        javafx.application.Platform.runLater(() -> {
+                            detailsLabel.setText(String.format(
+                                "Encontrados %d arquivos | Tamanho total: %s",
+                                arqs.length, formatBytes(tamanhoOriginalFinal)
+                            ));
+                            updateStatCard(statCards[0], formatBytes(tamanhoOriginalFinal));
+                        });
+
+                        Thread.sleep(500); // Pausa dramática
+                        
                         // COMPRESSÃO
                         File saida = new File("data/backup." + (algoritmo.equals("Huffman") ? "huff" : "lzw"));
 
