@@ -1,7 +1,15 @@
 package models.structures;
 
-import java.io.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
+import java.util.List;
 
 public class Compressor {
 
@@ -34,8 +42,10 @@ public class Compressor {
                 throw new Exception("ERRO: byte não encontrado na árvore de Huffman → " + b);
 
             for (char c : codigo.toCharArray()) {
-                if (c == '1') vb.set(pos++);
-                else vb.clear(pos++);
+                if (c == '1')
+                    vb.set(pos++);
+                else
+                    vb.clear(pos++);
             }
         }
 
@@ -57,8 +67,7 @@ public class Compressor {
         }
 
         try {
-            File[] arqs = path.listFiles((d, n) -> 
-                n.endsWith(".db") || n.endsWith(".hash") || n.endsWith(".idx"));
+            File[] arqs = path.listFiles((d, n) -> n.endsWith(".db") || n.endsWith(".hash") || n.endsWith(".idx"));
 
             if (arqs == null) {
                 throw new IOException("Failed to list files. Path might not be a directory or IO error occurred.");
@@ -67,7 +76,7 @@ public class Compressor {
             for (File f : arqs) {
                 boolean success = f.delete();
                 if (!success) {
-                    throw new IOException("Failed to delete: " + f.getName());
+                    System.err.println("WARNING: Could not delete " + f.getName() + " - ignoring and continuing.");
                 }
             }
         } catch (SecurityException e) {
@@ -83,7 +92,8 @@ public class Compressor {
         ois.close();
 
         // 1. Decodificação Huffman
-        // Nota: Assumindo que VetorDeBits.toString() está ok para alimentar Huffman.decodifica
+        // Nota: Assumindo que VetorDeBits.toString() está ok para alimentar
+        // Huffman.decodifica
         byte[] dados = Huffman.decodifica(new VetorDeBits(vetorBytes).toString(), codigos);
 
         deleteFiles(pastaSaida);
@@ -102,7 +112,7 @@ public class Compressor {
         // 1. Agrupa o conteúdo de todos os arquivos com seus headers
         for (File f : arquivos) {
             byte[] conteudo = java.nio.file.Files.readAllBytes(f.toPath());
-            
+
             // Header: #FILE:nome#SIZE:tamanho#\n
             allBytes.write(("#FILE:" + f.getName() + "#SIZE:" + conteudo.length + "#\n").getBytes("UTF-8"));
             allBytes.write(conteudo);
@@ -141,13 +151,14 @@ public class Compressor {
         arquivoCompactado.delete();
     }
 
-
     // --- MÉTODO AUXILIAR PARA RECONSTRUÇÃO (USADO POR HUFFMAN E LZW) ---
 
-    private static void reconstruirArquivos(byte[] dadosDescompactados, File arquivoCompactado, File pastaSaida) throws IOException, NumberFormatException {
+    private static void reconstruirArquivos(byte[] dadosDescompactados, File arquivoCompactado, File pastaSaida)
+            throws IOException, NumberFormatException {
         ByteArrayInputStream bais = new ByteArrayInputStream(dadosDescompactados);
 
-        // File pastaSaida = arquivoCompactado.getParentFile(); // Já recebido como parâmetro, mas útil se fosse diferente
+        // File pastaSaida = arquivoCompactado.getParentFile(); // Já recebido como
+        // parâmetro, mas útil se fosse diferente
 
         while (true) {
 
@@ -157,23 +168,23 @@ public class Compressor {
 
             // Lê até encontrar uma quebra de linha ou o fim do stream
             while ((ch = bais.read()) != -1) {
-                if (ch == '\n') break;
+                if (ch == '\n')
+                    break;
                 sb.append((char) ch);
             }
 
             String linha = sb.toString();
-            if (!linha.startsWith("#FILE:")) break; // acabou ou encontrou o fim
+            if (!linha.startsWith("#FILE:"))
+                break; // acabou ou encontrou o fim
 
             // Extrai nome
             String nome = linha.substring(6, linha.indexOf("#SIZE:"));
-            
+
             // Extrai tamanho
             int tamanho = Integer.parseInt(
-                linha.substring(
-                    linha.indexOf("#SIZE:") + 6,
-                    linha.lastIndexOf("#")
-                )
-            );
+                    linha.substring(
+                            linha.indexOf("#SIZE:") + 6,
+                            linha.lastIndexOf("#")));
 
             // 2. Ler exatamente os bytes do arquivo original
             byte[] conteudo = bais.readNBytes(tamanho);
@@ -184,10 +195,10 @@ public class Compressor {
             fos.close();
 
             // 4. Pular "\n#END#\n" (7 caracteres)
-            if(bais.available() >= 7) {
-                 bais.readNBytes(7);
+            if (bais.available() >= 7) {
+                bais.readNBytes(7);
             } else {
-                 break; // Sai se não houver mais dados suficientes para o footer
+                break; // Sai se não houver mais dados suficientes para o footer
             }
         }
     }
