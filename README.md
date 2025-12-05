@@ -2,15 +2,18 @@
 
 ## Índice
 
-- [Pré-requisitos](#pré_requisitos)
-- [Instalação e Uso](#instalação_e_uso)
-- [Estrutura](#estrutura)
+- [TP AEDS 03 - Gerenciador de Tarefas](#tp-aeds-03---gerenciador-de-tarefas)
+  - [Índice](#índice)
+  - [Pré-requisitos](#pré-requisitos)
+  - [Instalação e Uso](#instalação-e-uso)
+  - [Estrutura](#estrutura)
 
 ---
 
 ## Pré-requisitos
 
 * [Git](https://git-scm.com/downloads)
+* [Maven](https://maven.apache.org/)
 
 ---
 
