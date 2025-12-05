@@ -27,7 +27,7 @@ public class ArquivoTarefaCategoriaHash {
 
         // Hash Extensível para indexação por chave composta
         Constructor<RegistroHashTarefaCategoria> construtorHash = RegistroHashTarefaCategoria.class.getConstructor();
-        this.hashIndex = new HashExtensivel<>(construtorHash, 4, "data/tarefas_categorias.hash");
+        this.hashIndex = new HashExtensivel<>(construtorHash, 4, "data/tarefas_categorias.idx");
 
         this.proximoId = getLastId() + 1;
     }
