@@ -281,41 +281,267 @@ public class UsuarioViewNew extends MenuView {
     }
 
     private Node createBuscarPadraoForm(UsuarioController controller) {
-        VBox container = new VBox(15);
-        container.setMaxWidth(600);
-        container.setStyle("-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 10;");
+        VBox layout = new VBox(30);
+        layout.setPadding(new Insets(40));
+        layout.setStyle("-fx-background-color: #f5f7fa;");
+        layout.setAlignment(Pos.TOP_CENTER);
 
-        TextField padraoField = new TextField();
-        padraoField.setPromptText("Padrão a buscar");
-        styleField(padraoField);
+        // Header
+        VBox headerBox = new VBox(10);
+        headerBox.setAlignment(Pos.CENTER);
 
-        ComboBox<String> algoritmoBox = new ComboBox<>();
-        algoritmoBox.getItems().addAll("KMP (Knuth-Morris-Pratt)", "Boyer-Moore");
-        algoritmoBox.setValue("KMP (Knuth-Morris-Pratt)");
+        Label title = new Label("🔍 Buscar Usuários por Padrão");
+        title.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #667eea;");
 
-        TextArea resultArea = new TextArea();
-        resultArea.setEditable(false);
-        resultArea.setPrefRowCount(10);
+        Label subtitle = new Label("Algoritmos de busca por padrão: KMP e Boyer-Moore");
+        subtitle.setStyle("-fx-font-size: 14px; -fx-text-fill: #999; -fx-font-style: italic;");
 
-        Button buscarBtn = createButton("Buscar", "#667eea");
-        buscarBtn.setMaxWidth(Double.MAX_VALUE);
+        headerBox.getChildren().addAll(title, subtitle);
 
-        buscarBtn.setOnAction(e -> {
-            String opcao = algoritmoBox.getValue().startsWith("KMP") ? "1" : "2";
-            lastInput = padraoField.getText() + "\n" + opcao;
-            controller.buscarPorPadrao();
-        });
-
-        container.getChildren().addAll(
-            new Label("Padrão:"),
-            padraoField,
-            new Label("Algoritmo:"),
-            algoritmoBox,
-            buscarBtn,
-            resultArea
+        // Card de busca
+        VBox searchCard = new VBox(25);
+        searchCard.setMaxWidth(800);
+        searchCard.setAlignment(Pos.CENTER);
+        searchCard.setPadding(new Insets(40));
+        searchCard.setStyle(
+            "-fx-background-color: white; " +
+            "-fx-background-radius: 15; " +
+            "-fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.4), 20, 0, 0, 5);"
         );
 
-        return container;
+        // Ícone e descrição
+        Label iconLabel = new Label("🔤");
+        iconLabel.setStyle("-fx-font-size: 60px;");
+
+        Label descLabel = new Label("Digite um padrão para buscar nos nomes dos usuários");
+        descLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #666; -fx-text-alignment: center;");
+        descLabel.setWrapText(true);
+        descLabel.setMaxWidth(700);
+
+        // Campo de padrão
+        VBox inputSection = new VBox(15);
+        inputSection.setAlignment(Pos.CENTER);
+        inputSection.setMaxWidth(700);
+
+        Label padraoLabel = new Label("Padrão de busca:");
+        padraoLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
+
+        TextField padraoField = new TextField();
+        padraoField.setPromptText("Ex: Silva, João, Ana...");
+        padraoField.setStyle(
+            "-fx-font-size: 16px; " +
+            "-fx-padding: 15; " +
+            "-fx-background-radius: 10; " +
+            "-fx-border-color: #667eea; " +
+            "-fx-border-width: 2; " +
+            "-fx-border-radius: 10;"
+        );
+        padraoField.setMaxWidth(500);
+
+        // Seleção de algoritmo
+        Label algLabel = new Label("Algoritmo:");
+        algLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;");
+
+        HBox algoritmoBox = new HBox(15);
+        algoritmoBox.setAlignment(Pos.CENTER);
+
+        ToggleGroup algoritmoGroup = new ToggleGroup();
+
+        RadioButton kmpRadio = new RadioButton("KMP (Knuth-Morris-Pratt)");
+        kmpRadio.setToggleGroup(algoritmoGroup);
+        kmpRadio.setSelected(true);
+        kmpRadio.setStyle("-fx-font-size: 14px; -fx-text-fill: #555;");
+
+        RadioButton bmRadio = new RadioButton("Boyer-Moore");
+        bmRadio.setToggleGroup(algoritmoGroup);
+        bmRadio.setStyle("-fx-font-size: 14px; -fx-text-fill: #555;");
+
+        algoritmoBox.getChildren().addAll(kmpRadio, bmRadio);
+
+        inputSection.getChildren().addAll(padraoLabel, padraoField, algLabel, algoritmoBox);
+
+        // Botão buscar
+        Button buscarBtn = new Button("🔍 Buscar");
+        buscarBtn.setStyle(
+            "-fx-background-color: #667eea; " +
+            "-fx-text-fill: white; " +
+            "-fx-font-size: 16px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-padding: 15 50; " +
+            "-fx-background-radius: 10; " +
+            "-fx-cursor: hand; " +
+            "-fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.5), 10, 0, 0, 3);"
+        );
+        buscarBtn.setOnMouseEntered(e -> buscarBtn.setStyle(
+            "-fx-background-color: #5568d3; " +
+            "-fx-text-fill: white; " +
+            "-fx-font-size: 16px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-padding: 15 50; " +
+            "-fx-background-radius: 10; " +
+            "-fx-cursor: hand; " +
+            "-fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.7), 15, 0, 0, 5);"
+        ));
+        buscarBtn.setOnMouseExited(e -> buscarBtn.setStyle(
+            "-fx-background-color: #667eea; " +
+            "-fx-text-fill: white; " +
+            "-fx-font-size: 16px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-padding: 15 50; " +
+            "-fx-background-radius: 10; " +
+            "-fx-cursor: hand; " +
+            "-fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.5), 10, 0, 0, 3);"
+        ));
+
+        // Área de resultados
+        VBox resultBox = new VBox(15);
+        resultBox.setStyle(
+            "-fx-background-color: #f8f9ff; " +
+            "-fx-background-radius: 10; " +
+            "-fx-padding: 20; " +
+            "-fx-border-color: #e0e7ff; " +
+            "-fx-border-width: 2; " +
+            "-fx-border-radius: 10;"
+        );
+        resultBox.setMaxWidth(750);
+        resultBox.setVisible(false);
+
+        Label resultTitle = new Label("📊 Resultados da Busca:");
+        resultTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #667eea;");
+
+        VBox resultList = new VBox(10);
+        resultList.setStyle("-fx-padding: 10;");
+
+        ScrollPane resultScroll = new ScrollPane(resultList);
+        resultScroll.setFitToWidth(true);
+        resultScroll.setPrefHeight(300);
+        resultScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        resultBox.getChildren().addAll(resultTitle, resultScroll);
+
+        // Ação de buscar
+        buscarBtn.setOnAction(e -> {
+            String padrao = padraoField.getText().trim();
+            if (padrao.isEmpty()) {
+                showError("Por favor, digite um padrão de busca!");
+                return;
+            }
+
+            String opcao = kmpRadio.isSelected() ? "1" : "2";
+            String algoritmoNome = kmpRadio.isSelected() ? "KMP" : "Boyer-Moore";
+
+            try {
+                // Medir tempo de busca
+                long startTime = System.nanoTime();
+
+                lastInput = padrao + "\n" + opcao;
+                java.util.List<dao.ArquivoUsuario> temp = new java.util.ArrayList<>();
+
+                // Executar busca
+                java.util.List<models.Usuario> usuarios = arqUsuario.listarAtivos();
+                java.util.List<String> resultados = new java.util.ArrayList<>();
+
+                for (models.Usuario u : usuarios) {
+                    String texto = u.getNome();
+                    java.util.List<Integer> indices;
+
+                    if (opcao.equals("1")) {
+                        indices = dao.PatternMatching.searchKMP(texto, padrao);
+                    } else {
+                        indices = dao.PatternMatching.searchBoyerMoore(texto, padrao);
+                    }
+
+                    if (!indices.isEmpty()) {
+                        String destaque = criarDestaque(texto, indices, padrao.length());
+                        resultados.add("ID " + u.getId() + ": " + destaque + " (" + u.getLogin() + ")");
+                    }
+                }
+
+                long endTime = System.nanoTime();
+                double tempoMs = (endTime - startTime) / 1_000_000.0;
+
+                resultList.getChildren().clear();
+
+                if (resultados.isEmpty()) {
+                    Label noResults = new Label("❌ Nenhum usuário encontrado com o padrão \"" + padrao + "\"");
+                    noResults.setStyle("-fx-font-size: 14px; -fx-text-fill: #f44336; -fx-font-weight: bold;");
+                    resultList.getChildren().add(noResults);
+                } else {
+                    Label countLabel = new Label("✅ " + resultados.size() + " usuário(s) encontrado(s)");
+                    countLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #4CAF50; -fx-font-weight: bold;");
+                    resultList.getChildren().add(countLabel);
+
+                    for (String resultado : resultados) {
+                        Label itemLabel = new Label("• " + resultado);
+                        itemLabel.setStyle(
+                            "-fx-font-size: 13px; " +
+                            "-fx-text-fill: #333; " +
+                            "-fx-padding: 8; " +
+                            "-fx-background-color: white; " +
+                            "-fx-background-radius: 5;"
+                        );
+                        itemLabel.setWrapText(true);
+                        itemLabel.setMaxWidth(680);
+                        resultList.getChildren().add(itemLabel);
+                    }
+
+                    Label tempoLabel = new Label(String.format("⚡ Tempo de busca: %.3f ms usando %s", tempoMs, algoritmoNome));
+                    tempoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #9C27B0; -fx-font-weight: bold; -fx-padding: 10 0 0 0;");
+                    resultList.getChildren().add(tempoLabel);
+                }
+
+                resultBox.setVisible(true);
+
+            } catch (Exception ex) {
+                showError("Erro ao buscar: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+
+        // Permitir buscar com Enter
+        padraoField.setOnAction(e -> buscarBtn.fire());
+
+        // Botão voltar
+        Button voltarBtn = new Button("← Voltar");
+        voltarBtn.setStyle(
+            "-fx-background-color: transparent; " +
+            "-fx-text-fill: #667eea; " +
+            "-fx-font-size: 14px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-cursor: hand; " +
+            "-fx-underline: true;"
+        );
+        voltarBtn.setOnAction(e -> {
+            if (mainView != null) {
+                mainView.showMainScreen();
+            }
+        });
+
+        searchCard.getChildren().addAll(iconLabel, descLabel, inputSection, buscarBtn, resultBox);
+
+        layout.getChildren().addAll(headerBox, searchCard, voltarBtn);
+
+        ScrollPane scrollPane = new ScrollPane(layout);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background: #f5f7fa; -fx-background-color: #f5f7fa;");
+        return scrollPane;
+    }
+
+    private String criarDestaque(String texto, java.util.List<Integer> indices, int len) {
+        StringBuilder sb = new StringBuilder(texto);
+        for (int i = indices.size() - 1; i >= 0; i--) {
+            int idx = indices.get(i);
+            sb.insert(idx + len, "]");
+            sb.insert(idx, "[");
+        }
+        return sb.toString();
+    }
+
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Erro");
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     private Node createGerenciarTelefonesForm(UsuarioController controller) {

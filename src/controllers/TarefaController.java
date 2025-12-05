@@ -284,4 +284,5 @@ public class TarefaController {
       view.exibirErro("Falha ao listar categorias: " + e.getMessage());
     }
   }
+
 }

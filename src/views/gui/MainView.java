@@ -199,7 +199,9 @@ public class MainView extends Application {
         Menu menuTarefas = new Menu("📋 Tarefas");
         MenuItem gerenciarTarefas = new MenuItem("Gerenciar Tarefas");
         gerenciarTarefas.setOnAction(e -> showTarefaView("gerenciar"));
-        menuTarefas.getItems().add(gerenciarTarefas);
+        MenuItem buscarTarefaPorId = new MenuItem("🔑 Buscar por ID (Hash)");
+        buscarTarefaPorId.setOnAction(e -> showTarefaView("buscarPorId"));
+        menuTarefas.getItems().addAll(gerenciarTarefas, buscarTarefaPorId);
 
         // Menu Categorias
         Menu menuCategorias = new Menu("🏷️ Categorias");
@@ -217,7 +219,9 @@ public class MainView extends Application {
         Menu menuUsuarios = new Menu("👥 Usuários");
         MenuItem listarUsuarios = new MenuItem("Listar Usuários");
         listarUsuarios.setOnAction(e -> showUsuarioView("listar"));
-        menuUsuarios.getItems().add(listarUsuarios);
+        MenuItem buscarUsuarioPorPadrao = new MenuItem("🔍 Buscar por Padrão");
+        buscarUsuarioPorPadrao.setOnAction(e -> showUsuarioView("padrao"));
+        menuUsuarios.getItems().addAll(listarUsuarios, buscarUsuarioPorPadrao);
 
         // Menu Apontamentos
         Menu menuApontamentos = new Menu("⏱️ Apontamentos");
@@ -440,7 +444,7 @@ public class MainView extends Application {
         mainLayout.setCenter(usuarioView.createView(action, usuarioController));
     }
 
-    private void showTarefaView(String action) {
+    public void showTarefaView(String action) {
         mainLayout.setCenter(tarefaView.createView(action, tarefaController));
     }
 

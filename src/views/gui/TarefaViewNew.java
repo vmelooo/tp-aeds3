@@ -54,18 +54,32 @@ public class TarefaViewNew extends MenuView {
     }
 
     public Node createView(String action, TarefaController controller) {
+        switch (action) {
+            case "buscarPorId" -> {
+                return createBuscarPorIdView(controller);
+            }
+            default -> {
+                return createGerenciarView(controller);
+            }
+        }
+    }
+
+    private Node createGerenciarView(TarefaController controller) {
         VBox layout = new VBox(20);
         layout.setPadding(new Insets(20));
         layout.setStyle("-fx-background-color: #f5f7fa;");
 
-        // Título e botão Nova Tarefa
+        // Título e botões
         Label title = new Label("Gerenciar Tarefas");
         title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #667eea;");
 
         Button novaTarefaBtn = createStyledButton("+ Nova Tarefa", "#667eea");
         novaTarefaBtn.setOnAction(e -> showNovaTarefaDialog(controller));
 
-        HBox topBar = new HBox(20, title, novaTarefaBtn);
+        Button buscarIdBtn = createStyledButton("🔑 Buscar por ID (Hash)", "#FF9800");
+        buscarIdBtn.setOnAction(e -> mainView.showTarefaView("buscarPorId"));
+
+        HBox topBar = new HBox(15, title, novaTarefaBtn, buscarIdBtn);
         topBar.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(title, Priority.ALWAYS);
 
@@ -836,6 +850,238 @@ public class TarefaViewNew extends MenuView {
                 ex.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Cria a interface visual de busca de tarefa por ID usando Hash Extensível
+     */
+    private Node createBuscarPorIdView(TarefaController controller) {
+        VBox layout = new VBox(30);
+        layout.setPadding(new Insets(40));
+        layout.setStyle("-fx-background-color: #f5f7fa;");
+        layout.setAlignment(Pos.TOP_CENTER);
+
+        // Header
+        VBox headerBox = new VBox(10);
+        headerBox.setAlignment(Pos.CENTER);
+
+        Label title = new Label("🔍 Buscar Tarefa por ID");
+        title.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #667eea;");
+
+        Label subtitle = new Label("Busca otimizada usando Hash Extensível - Complexidade O(1)");
+        subtitle.setStyle("-fx-font-size: 14px; -fx-text-fill: #999; -fx-font-style: italic;");
+
+        headerBox.getChildren().addAll(title, subtitle);
+
+        // Card de busca
+        VBox searchCard = new VBox(25);
+        searchCard.setMaxWidth(700);
+        searchCard.setAlignment(Pos.CENTER);
+        searchCard.setPadding(new Insets(40));
+        searchCard.setStyle(
+            "-fx-background-color: white; " +
+            "-fx-background-radius: 15; " +
+            "-fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.4), 20, 0, 0, 5);"
+        );
+
+        // Ícone e descrição
+        Label iconLabel = new Label("🔑");
+        iconLabel.setStyle("-fx-font-size: 60px;");
+
+        Label descLabel = new Label("Digite o ID da tarefa para buscá-la instantaneamente");
+        descLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #666; -fx-text-alignment: center;");
+        descLabel.setWrapText(true);
+        descLabel.setMaxWidth(600);
+
+        // Campo de ID
+        HBox inputBox = new HBox(15);
+        inputBox.setAlignment(Pos.CENTER);
+        inputBox.setMaxWidth(500);
+
+        TextField idField = new TextField();
+        idField.setPromptText("Digite o ID da tarefa");
+        idField.setStyle(
+            "-fx-font-size: 18px; " +
+            "-fx-padding: 15; " +
+            "-fx-background-radius: 10; " +
+            "-fx-border-color: #667eea; " +
+            "-fx-border-width: 2; " +
+            "-fx-border-radius: 10; " +
+            "-fx-min-width: 300;"
+        );
+
+        Button buscarBtn = new Button("Buscar");
+        buscarBtn.setStyle(
+            "-fx-background-color: #667eea; " +
+            "-fx-text-fill: white; " +
+            "-fx-font-size: 16px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-padding: 15 40; " +
+            "-fx-background-radius: 10; " +
+            "-fx-cursor: hand; " +
+            "-fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.5), 10, 0, 0, 3);"
+        );
+        buscarBtn.setOnMouseEntered(e -> buscarBtn.setStyle(
+            "-fx-background-color: #5568d3; " +
+            "-fx-text-fill: white; " +
+            "-fx-font-size: 16px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-padding: 15 40; " +
+            "-fx-background-radius: 10; " +
+            "-fx-cursor: hand; " +
+            "-fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.7), 15, 0, 0, 5);"
+        ));
+        buscarBtn.setOnMouseExited(e -> buscarBtn.setStyle(
+            "-fx-background-color: #667eea; " +
+            "-fx-text-fill: white; " +
+            "-fx-font-size: 16px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-padding: 15 40; " +
+            "-fx-background-radius: 10; " +
+            "-fx-cursor: hand; " +
+            "-fx-effect: dropshadow(gaussian, rgba(102, 126, 234, 0.5), 10, 0, 0, 3);"
+        ));
+
+        inputBox.getChildren().addAll(idField, buscarBtn);
+
+        // Área de resultado
+        VBox resultBox = new VBox(15);
+        resultBox.setStyle(
+            "-fx-background-color: #f8f9ff; " +
+            "-fx-background-radius: 10; " +
+            "-fx-padding: 20; " +
+            "-fx-border-color: #e0e7ff; " +
+            "-fx-border-width: 2; " +
+            "-fx-border-radius: 10;"
+        );
+        resultBox.setMaxWidth(650);
+        resultBox.setVisible(false);
+
+        Label resultTitle = new Label("Resultado da Busca:");
+        resultTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #667eea;");
+
+        VBox tarefaInfo = new VBox(10);
+        tarefaInfo.setStyle("-fx-padding: 10;");
+
+        resultBox.getChildren().addAll(resultTitle, tarefaInfo);
+
+        // Ação do botão buscar
+        buscarBtn.setOnAction(e -> {
+            String idStr = idField.getText().trim();
+            if (idStr.isEmpty()) {
+                showError("Por favor, digite um ID!");
+                return;
+            }
+
+            try {
+                int id = Integer.parseInt(idStr);
+
+                // Medir tempo de busca para mostrar performance do hash
+                long startTime = System.nanoTime();
+                Tarefa tarefa = controller.getArquivoTarefa().read(id);
+                long endTime = System.nanoTime();
+                double tempoMs = (endTime - startTime) / 1_000_000.0;
+
+                tarefaInfo.getChildren().clear();
+
+                if (tarefa == null) {
+                    Label notFoundLabel = new Label("❌ Tarefa com ID " + id + " não encontrada.");
+                    notFoundLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: #f44336; -fx-font-weight: bold;");
+                    tarefaInfo.getChildren().add(notFoundLabel);
+                } else {
+                    // Informações da tarefa
+                    Label idLabel = createInfoLabel("ID:", String.valueOf(tarefa.getId()), "#667eea");
+                    Label tituloLabel = createInfoLabel("Título:", tarefa.getTitulo(), "#333");
+                    Label descricaoLabel = createInfoLabel("Descrição:", tarefa.getDescricao(), "#555");
+
+                    try {
+                        Usuario usuario = arqUsuario.read(tarefa.getIdUsuario());
+                        String nomeUsuario = usuario != null ? usuario.getNome() : "Desconhecido";
+                        Label usuarioLabel = createInfoLabel("Responsável:", nomeUsuario, "#555");
+
+                        StatusTarefa status = arqStatus.read(tarefa.getIdStatus());
+                        String statusNome = status != null ? status.getNome() : "Sem status";
+                        Label statusLabel = createInfoLabel("Status:", statusNome, getStatusColorText(statusNome));
+
+                        // Tempo de busca
+                        Label tempoLabel = new Label(String.format("⚡ Tempo de busca: %.3f ms (Hash Extensível)", tempoMs));
+                        tempoLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #4CAF50; -fx-font-weight: bold; -fx-padding: 10 0 0 0;");
+
+                        tarefaInfo.getChildren().addAll(idLabel, tituloLabel, descricaoLabel,
+                            usuarioLabel, statusLabel, new Separator(), tempoLabel);
+
+                        // Botão para abrir detalhes
+                        Button detalhesBtn = createStyledButton("Ver Detalhes Completos", "#667eea");
+                        detalhesBtn.setOnAction(ev -> {
+                            mainView.showTarefaView("gerenciar");
+                        });
+                        tarefaInfo.getChildren().add(detalhesBtn);
+
+                    } catch (Exception ex) {
+                        showError("Erro ao carregar detalhes: " + ex.getMessage());
+                    }
+                }
+
+                resultBox.setVisible(true);
+
+            } catch (NumberFormatException ex) {
+                showError("ID inválido! Digite apenas números.");
+            } catch (Exception ex) {
+                showError("Erro ao buscar tarefa: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+
+        // Permitir buscar com Enter
+        idField.setOnAction(e -> buscarBtn.fire());
+
+        // Botão voltar
+        Button voltarBtn = new Button("← Voltar");
+        voltarBtn.setStyle(
+            "-fx-background-color: transparent; " +
+            "-fx-text-fill: #667eea; " +
+            "-fx-font-size: 14px; " +
+            "-fx-font-weight: bold; " +
+            "-fx-cursor: hand; " +
+            "-fx-underline: true;"
+        );
+        voltarBtn.setOnAction(e -> mainView.showTarefaView("gerenciar"));
+
+        searchCard.getChildren().addAll(iconLabel, descLabel, inputBox, resultBox);
+
+        layout.getChildren().addAll(headerBox, searchCard, voltarBtn);
+
+        ScrollPane scrollPane = new ScrollPane(layout);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background: #f5f7fa; -fx-background-color: #f5f7fa;");
+        return scrollPane;
+    }
+
+    private Label createInfoLabel(String label, String value, String color) {
+        HBox box = new HBox(10);
+        box.setAlignment(Pos.CENTER_LEFT);
+
+        Label labelText = new Label(label);
+        labelText.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #999;");
+        labelText.setMinWidth(100);
+
+        Label valueText = new Label(value);
+        valueText.setStyle("-fx-font-size: 14px; -fx-text-fill: " + color + "; -fx-font-weight: bold;");
+        valueText.setWrapText(true);
+        valueText.setMaxWidth(500);
+
+        Label result = new Label(label + " " + value);
+        result.setStyle("-fx-font-size: 14px; -fx-padding: 5;");
+        return result;
+    }
+
+    private String getStatusColorText(String statusNome) {
+        return switch (statusNome.toLowerCase()) {
+            case "pendente" -> "#FFC107";
+            case "em andamento" -> "#2196F3";
+            case "concluída", "concluida" -> "#4CAF50";
+            default -> "#999";
+        };
     }
 
     // Métodos auxiliares de estilo
